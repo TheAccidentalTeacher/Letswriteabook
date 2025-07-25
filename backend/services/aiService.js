@@ -777,17 +777,11 @@ JSON format:
       chapterOutline.wordTarget = Math.min(chapterOutline.wordTarget, 8000);
     }
     
-    const maxRetries = 3;
-    let retryCount = 0;
+    // SINGLE ATTEMPT GENERATION - NO RETRY LOOP
+    const chapterStart = Date.now();
     
-    while (retryCount < maxRetries) {
-      retryCount++;
-      
-      try {
-        const chapterStart = Date.now();
-        
-        // Get genre-specific instructions
-        const genreInstruction = genreInstructions[job.genre]?.[job.subgenre];
+    // Get genre-specific instructions
+    const genreInstruction = genreInstructions[job.genre]?.[job.subgenre];
         
         // LIGHTWEIGHT CONSISTENCY CHECK - Generate contextual notes
         let consistencyPrompt = '';
@@ -1002,21 +996,9 @@ Write only the chapter content, no metadata or formatting. Target ${chapterOutli
           consistencyCheck: consistencyValidation // Include lightweight consistency results
         };
         
-        logger.info(`Generated chapter ${chapterNumber} for job ${jobId} (${wordCount} words, attempt ${retryCount})`);
+        logger.info(`Generated chapter ${chapterNumber} for job ${jobId} (${wordCount} words)`);
         
         return chapter;
-        
-      } catch (error) {
-        logger.error(`Attempt ${retryCount} failed for chapter ${chapterNumber} in job ${jobId}:`, error);
-        
-        if (retryCount >= maxRetries) {
-          throw new Error(`Failed to generate chapter ${chapterNumber} after ${maxRetries} attempts: ${error.message}`);
-        }
-        
-        // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
-      }
-    }
   }
   
   async resumeChapterGeneration(jobId, startFromChapter = 1) {
