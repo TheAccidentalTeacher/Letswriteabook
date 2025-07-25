@@ -12,26 +12,15 @@ const router = express.Router();
  * Basic health check - lightweight endpoint for load balancers
  * GET /health
  */
-router.get('/', async (req, res) => {
-  try {
-    const health = {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development'
-    };
-
-    // Simple health check - just return OK
-    res.status(200).json(health);
-  } catch (error) {
-    // Even if there's an error, return 200 for health check
-    res.status(200).json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      message: 'Service is running'
-    });
-  }
+router.get('/', (req, res) => {
+  // Always return 200 for Railway healthcheck
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: process.env.npm_package_version || '1.0.0',
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 /**
