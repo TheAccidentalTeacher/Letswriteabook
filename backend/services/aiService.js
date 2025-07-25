@@ -12,6 +12,7 @@ const genreInstructions = require('../shared/genreInstructions');
 const humanWritingEnhancements = require('../shared/humanWritingEnhancements');
 const universalFramework = require('../shared/universalHumanWritingFramework');
 const advancedRefinements = require('../shared/advancedHumanWritingRefinements');
+const ContinuityGuardian = require('../shared/continuityGuardian');
 // const monitoringService = require('./monitoringService'); // Removed - was causing crashes
 
 class AIService {
@@ -49,10 +50,14 @@ class AIService {
     // monitoringService.initializeJob(jobId); // Removed - was causing crashes
     logger.info(`Monitoring service disabled for job ${jobId}`);
     
+    // Initialize continuity guardian for story consistency tracking
+    const continuityGuardian = new ContinuityGuardian(jobId);
+    
     // Add to active jobs
     this.activeJobs.set(jobId, {
       startTime: Date.now(),
-      status: 'planning'
+      status: 'planning',
+      continuityGuardian: continuityGuardian
     });
     
     try {
@@ -833,6 +838,9 @@ Write only the chapter content, no metadata or formatting.`;
         
         // Validate continuity if enabled
         let continuityValidation = { isValid: true, issues: [], suggestions: [] };
+        const activeJob = this.activeJobs.get(jobId);
+        const continuityGuardian = activeJob?.continuityGuardian;
+        
         if (job.humanLikeWriting && job.continuityGuardian !== false && continuityGuardian) {
           try {
             // Emit validation start
@@ -917,10 +925,12 @@ Write only the chapter content, no metadata or formatting.`;
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
     
-    // Add to active jobs
+    // Preserve existing activeJob data or create new with continuityGuardian
+    const existingActiveJob = this.activeJobs.get(jobId);
     this.activeJobs.set(jobId, {
-      startTime: Date.now(),
-      status: 'writing'
+      startTime: existingActiveJob?.startTime || Date.now(),
+      status: 'writing',
+      continuityGuardian: existingActiveJob?.continuityGuardian || new ContinuityGuardian(jobId)
     });
     
     // Update job status
