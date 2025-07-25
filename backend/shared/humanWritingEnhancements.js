@@ -12,6 +12,43 @@ const humanWritingEnhancements = {
   // I. CREATIVE INNOVATION ENGINE (Target: 85%)
   // Current weakness: 65% - needs dramatic improvement
   creativeInnovation: {
+    // UNIVERSAL STORYTELLING CRAFT ISSUES
+    plotThreadConsistency: {
+      description: "All introduced elements must serve the complete narrative arc",
+      principle: "Every character, object, or concept introduced must receive proper development or resolution",
+      techniques: [
+        "Track every character mentioned - ensure each has purpose beyond their introduction",
+        "Elements introduced in early chapters must have payoff in later chapters",
+        "Minor characters who disappear without explanation break reader trust",
+        "Objects or concepts mentioned early should influence later plot developments"
+      ],
+      execution: "Character mentioned in Chapter 1 must appear again with purpose, not be forgotten"
+    },
+    
+    foreshadowingMastery: {
+      description: "Major reveals must be earned through careful setup",
+      principle: "Surprises should feel inevitable in hindsight but unexpected in the moment",
+      techniques: [
+        "Plant 3-5 subtle behavioral clues before major character revelations",
+        "Character betrayals need foundation laid through small inconsistencies",
+        "Give characters believable reasons for their hidden motivations",
+        "Make clues meaningful but not obvious - avoid heavy-handed telegraphing"
+      ],
+      execution: "Reader should be able to re-read and say 'Of course, the signs were there'"
+    },
+    
+    resolutionClarity: {
+      description: "Endings must provide concrete closure while maintaining emotional impact",
+      principle: "Answer all major plot questions with specific details, not vague implications",
+      techniques: [
+        "Show characters' actual futures, not just hint at possibilities",
+        "Resolve all significant relationships with clear outcomes",
+        "Provide concrete details about how conflicts are resolved",
+        "Address the fate of all important characters and plot threads"
+      ],
+      execution: "Reader should know what happens next, not wonder if the author forgot something"
+    },
+    
     unexpectedMoments: {
       description: "Surprise readers and characters alike with genuine twists",
       techniques: [
@@ -80,6 +117,16 @@ const humanWritingEnhancements = {
   // III. NARRATIVE COMPLEXITY (Target: 85%)
   // Current performance: 70% - needs focused improvement
   narrativeComplexity: {
+    plotThreadConsistency: {
+      description: "Every introduced element must be tracked and developed or resolved",
+      techniques: [
+        "If a character mentions an important event, reference it consistently in later chapters",
+        "Major threats introduced early (like biotech viruses) must have clear development arcs",
+        "Character backstory elements must influence current story events meaningfully",
+        "No plot thread should be abandoned without acknowledgment or resolution"
+      ]
+    },
+    
     layeredConsequences: {
       description: "Every choice creates ripple effects",
       techniques: [
@@ -90,13 +137,25 @@ const humanWritingEnhancements = {
       ]
     },
     
-    ambiguousOutcomes: {
-      description: "Real resolution is messy and incomplete",
+    characterForeshadowing: {
+      description: "Character betrayals and revelations must be subtly prepared",
       techniques: [
-        "Victory comes with genuine costs",
-        "Problems get solved but relationships change",
-        "Characters achieve goals but question if they were worth it",
-        "New information reframes previous 'victories'"
+        "Show characters being evasive about specific topics",
+        "Include small actions that could be interpreted multiple ways",
+        "Let characters have private conversations that hint at hidden agendas",
+        "Plant motivations that explain later 'surprising' behavior"
+      ]
+    },
+    
+    ambiguousOutcomes: {
+      description: "Real resolution provides closure while maintaining complexity",
+      techniques: [
+        "Victory comes with genuine costs that affect character relationships",
+        "Problems get solved but create new challenges for different characters",
+        "Characters achieve goals but question if the price was worth it",
+        "Provide concrete details about what actually happens to major plot elements",
+        "Show clear character states and relationship changes after major events",
+        "Give specific information about world changes rather than vague implications"
       ]
     },
     
@@ -126,9 +185,10 @@ HUMAN AUTHENTICITY SETUP:
 - Identify where characters will avoid saying what they really mean
 
 NARRATIVE COMPLEXITY FOUNDATION:
-- Connect at least 3 seemingly separate plot elements
-- Plan how each character's background creates current complications
-- Design victory conditions that require meaningful sacrifice`
+- Track all introduced plot threads (characters mentioned, threats established, mysteries raised)
+- Plan how each element will develop or be acknowledged throughout the story
+- Design character motivations that explain both current actions and future revelations
+- Create foreshadowing through character behavior patterns, not just dialogue hints`
     },
     
     outline: {
@@ -145,12 +205,19 @@ AUTHENTIC PACING:
 
 COMPLEX PLOT WEAVING:
 - Each chapter should advance 2-3 different story threads
-- Minor character decisions should affect major character options
-- Plan how background worldbuilding will become plot-relevant`
+- Reference previously established plot elements consistently
+- Show how background elements (like biotech threats) develop into active story forces
+- Plan character secrets and betrayals with clear motivation trails that readers can trace back`
     },
     
     chapter: {
       humanLikeAdditions: `
+UNIVERSAL STORYTELLING CRAFT:
+- PLOT THREAD CONSISTENCY: Reference or develop at least one element introduced in earlier chapters
+- FORESHADOWING EXECUTION: If a character will be revealed as traitor/ally later, include one subtle behavioral clue
+- CONSEQUENCE CHAINS: Show how a character decision from previous chapters affects current events
+- RESOLUTION SPECIFICITY: When problems are solved, provide concrete details about the solution and its effects
+
 CREATIVE INNOVATION IN EXECUTION:
 - Include one moment that surprises both character and reader
 - Show a character being wrong about something they're supposed to know
