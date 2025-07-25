@@ -13,6 +13,7 @@ const humanWritingEnhancements = require('../shared/humanWritingEnhancements');
 const universalFramework = require('../shared/universalHumanWritingFramework');
 const advancedRefinements = require('../shared/advancedHumanWritingRefinements');
 const ContinuityGuardian = require('../shared/continuityGuardian');
+const LightweightConsistency = require('../shared/lightweightConsistency');
 
 class AIService {
   constructor() {
@@ -774,6 +775,16 @@ JSON format:
         // Get genre-specific instructions
         const genreInstruction = genreInstructions[job.genre]?.[job.subgenre];
         
+        // LIGHTWEIGHT CONSISTENCY CHECK - Generate contextual notes
+        let consistencyPrompt = '';
+        try {
+          const consistency = new LightweightConsistency();
+          consistencyPrompt = consistency.generateConsistencyPrompt(job.chapters || []);
+        } catch (error) {
+          logger.warn(`Consistency check failed for chapter ${chapterNumber}: ${error.message}`);
+          // Continue without consistency check - don't block generation
+        }
+        
         // Enhanced prompt for word count enforcement on retries
         const wordCountEnforcement = retryCount > 0 ? `
 
@@ -817,6 +828,8 @@ ${job.targetChapters > 20 ?
 Main characters: ${job.analysis?.characters?.join(', ') || 'N/A'}${job.humanLikeWriting ? `
 Human-like story elements: ${JSON.stringify(job.analysis?.humanLikeElements || {}, null, 1)}` : ''}` :
   JSON.stringify(job.analysis || {}, null, 1)}
+
+${consistencyPrompt ? `\n${consistencyPrompt}\n` : ''}
 
 ${job.humanLikeWriting ? humanWritingEnhancements.prompts.chapter.humanLikeAdditions : ''}
 
@@ -928,6 +941,31 @@ Write only the chapter content, no metadata or formatting. Ensure the chapter re
           details: `Chapter ${chapterNumber} generated: ${wordCount} words (${Math.round(wordAccuracy)}% of target)`
         });
         
+        // LIGHTWEIGHT CONSISTENCY VALIDATION - Quick check for obvious issues
+        let consistencyValidation = { isValid: true, warnings: [] };
+        if (job.chapters && job.chapters.length > 0) {
+          try {
+            const consistency = new LightweightConsistency();
+            consistencyValidation = consistency.validateChapter(chapterContent, job.chapters);
+            
+            if (!consistencyValidation.isValid && consistencyValidation.warnings.length > 0) {
+              logger.warn(`Consistency warnings for chapter ${chapterNumber}: ${consistencyValidation.warnings.join(', ')}`);
+              
+              // Emit consistency warnings (but don't block generation)
+              emitGenerationProgress(jobId, {
+                phase: 'chapter_generation',
+                chapterNumber,
+                status: 'consistency_warning',
+                warnings: consistencyValidation.warnings,
+                details: `Consistency warnings: ${consistencyValidation.warnings.join(', ')}`
+              });
+            }
+          } catch (error) {
+            logger.warn(`Consistency validation error for chapter ${chapterNumber}: ${error.message}`);
+            // Continue without validation - don't block generation
+          }
+        }
+        
         // Validate continuity if enabled
         let continuityValidation = { isValid: true, issues: [], suggestions: [] };
         const activeJob = this.activeJobs.get(jobId);
@@ -993,7 +1031,8 @@ Write only the chapter content, no metadata or formatting. Ensure the chapter re
           cost: cost,
           attempts: attempts, // This is the parameter passed to the function
           generationTime: Date.now() - chapterStart,
-          continuityCheck: continuityValidation // Include continuity validation results
+          continuityCheck: continuityValidation, // Include continuity validation results
+          consistencyCheck: consistencyValidation // Include lightweight consistency results
         };
         
         logger.info(`Generated chapter ${chapterNumber} for job ${jobId} (${wordCount} words, attempt ${retryCount})`);
