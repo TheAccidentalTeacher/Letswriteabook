@@ -729,6 +729,32 @@ JSON format:
       chapterOutline.wordTarget = Math.round(job.targetWordCount / job.targetChapters);
     }
     
+    // DYNAMIC WORD COUNT ADJUSTMENT - Compensate for previous chapter deficits
+    if (job.chapters && job.chapters.length > 0) {
+      const completedWords = job.chapters.reduce((sum, ch) => sum + (ch.wordCount || 0), 0);
+      const expectedWordsAtThisPoint = Math.round((job.targetWordCount / job.targetChapters) * job.chapters.length);
+      const deficit = expectedWordsAtThisPoint - completedWords;
+      
+      if (deficit > 500) { // If we're significantly behind
+        const chaptersRemaining = job.targetChapters - chapterNumber + 1;
+        const extraWordsNeeded = Math.round(deficit / chaptersRemaining);
+        chapterOutline.wordTarget += extraWordsNeeded;
+        
+        logger.info(`Chapter ${chapterNumber}: Adding ${extraWordsNeeded} words to compensate for ${deficit} word deficit. New target: ${chapterOutline.wordTarget}`);
+        
+        // Emit deficit tracking
+        emitGenerationProgress(jobId, {
+          phase: 'chapter_planning',
+          chapterNumber,
+          status: 'word_adjustment',
+          deficit: deficit,
+          adjustment: extraWordsNeeded,
+          newTarget: chapterOutline.wordTarget,
+          details: `Adjusting chapter ${chapterNumber} target by +${extraWordsNeeded} words to compensate for running deficit of ${deficit} words`
+        });
+      }
+    }
+    
     // Check for very large chapters that might hit token limits
     if (chapterOutline.wordTarget > 8000) {
       logger.warn(`Very large chapter ${chapterNumber} requested: ${chapterOutline.wordTarget} words. May hit token limits.`);
@@ -748,14 +774,32 @@ JSON format:
         // Get genre-specific instructions
         const genreInstruction = genreInstructions[job.genre]?.[job.subgenre];
         
+        // Enhanced prompt for word count enforcement on retries
+        const wordCountEnforcement = retryCount > 0 ? `
+
+⚠️ CRITICAL WORD COUNT REQUIREMENT ⚠️
+This chapter MUST be at least ${Math.round(chapterOutline.wordTarget * 0.8)} words to meet publication standards.
+Previous attempt was too short. You MUST write a full, detailed chapter that reaches the target.
+
+EXPANSION STRATEGIES FOR ADEQUATE LENGTH:
+- Add detailed scene descriptions and sensory details
+- Include internal character thoughts and emotions
+- Expand dialogue with subtext and character development
+- Add transitional scenes between major events
+- Include character reactions and consequences to events
+- Develop subplot elements that advance the story
+- Add environmental details that enhance mood and setting
+
+REQUIRED: Write AT LEAST ${Math.round(chapterOutline.wordTarget * 0.8)} words. Do not stop until you've written a complete, full-length chapter.` : '';
+
         const chapterPrompt = `
-Write Chapter ${chapterNumber} of the novel "${job.title}".
+Write Chapter ${chapterNumber} of the novel "${job.title}".${wordCountEnforcement}
 
 CHAPTER OUTLINE:
 Title: ${chapterOutline.title}
 Summary: ${chapterOutline.summary}
 Key Events: ${chapterOutline.keyEvents.join(', ')}
-Target Word Count: ${chapterOutline.wordTarget}${job.humanLikeWriting ? `
+Target Word Count: ${chapterOutline.wordTarget}${retryCount > 0 ? ` (MINIMUM REQUIRED: ${Math.round(chapterOutline.wordTarget * 0.8)} words)` : ''}${job.humanLikeWriting ? `
 Human-Like Elements: ${JSON.stringify(chapterOutline.humanLikeElements || {}, null, 1)}` : ''}
 
 NOVEL CONTEXT:
@@ -815,7 +859,12 @@ ADVANCED AUTHENTICITY TECHNIQUES:
 
 Write approximately ${chapterOutline.wordTarget} words that push established complexity to breaking points and challenge reader expectations while maintaining narrative authenticity.` : `Write approximately ${chapterOutline.wordTarget} words of engaging prose that maintains genre conventions and advances the story effectively.`}
 
-Write only the chapter content, no metadata or formatting.`;
+${retryCount > 0 ? `
+🎯 WORD COUNT ENFORCEMENT: This chapter MUST reach at least ${Math.round(chapterOutline.wordTarget * 0.8)} words. 
+Write detailed scenes, include character development, expand dialogue, and add descriptive elements to reach the target length.
+DO NOT end the chapter early - continue writing until you've reached the required word count.` : ''}
+
+Write only the chapter content, no metadata or formatting. Ensure the chapter reaches the target word count through rich storytelling and detailed prose.`;
 
         // Emit generation progress
         emitGenerationProgress(jobId, {
@@ -826,15 +875,47 @@ Write only the chapter content, no metadata or formatting.`;
           details: `Generating chapter ${chapterNumber}: "${chapterOutline.title}"`
         });
 
+        // Dynamic token allocation based on word target and retry attempt
+        let maxTokens;
+        if (retryCount > 0) {
+          // More aggressive token allocation for retries
+          maxTokens = Math.min(16000, Math.max(6000, Math.round(chapterOutline.wordTarget * 2.2)));
+        } else {
+          // Standard allocation for first attempt  
+          maxTokens = Math.min(16000, Math.max(4000, Math.round(chapterOutline.wordTarget * 1.6)));
+        }
+
         const response = await this.openai.chat.completions.create({
           model: 'gpt-4o',
           messages: [{ role: 'user', content: chapterPrompt }],
-          temperature: 0.7,
-          max_tokens: Math.min(16000, Math.max(4000, Math.round(chapterOutline.wordTarget * 1.6))) // Respect 16K limit, reduce multiplier
+          temperature: retryCount > 0 ? 0.8 : 0.7, // Slightly higher creativity for retries
+          max_tokens: maxTokens
         });
         
         const chapterContent = response.choices[0].message.content.trim();
         const wordCount = this.countWords(chapterContent);
+        
+        // WORD COUNT VALIDATION - Check if we're significantly under target
+        const wordTarget = chapterOutline.wordTarget;
+        const wordAccuracy = (wordCount / wordTarget) * 100;
+        const minimumAcceptable = 65; // Must hit at least 65% of target
+        
+        if (wordAccuracy < minimumAcceptable && retryCount < maxRetries) {
+          logger.warn(`Chapter ${chapterNumber} word count too low: ${wordCount}/${wordTarget} words (${Math.round(wordAccuracy)}%). Retrying with enhanced prompts.`);
+          
+          // Emit retry notification
+          emitGenerationProgress(jobId, {
+            phase: 'chapter_generation',
+            chapterNumber,
+            status: 'word_count_retry',
+            wordsGenerated: wordCount,
+            wordTarget: chapterOutline.wordTarget,
+            accuracy: Math.round(wordAccuracy),
+            details: `Chapter ${chapterNumber} too short (${wordCount}/${wordTarget} words). Retrying with enhanced prompts.`
+          });
+          
+          throw new Error(`Word count too low: ${wordCount}/${wordTarget} words (${Math.round(wordAccuracy)}%). Retrying.`);
+        }
         
         // Emit generation completion
         emitGenerationProgress(jobId, {
@@ -843,7 +924,8 @@ Write only the chapter content, no metadata or formatting.`;
           status: 'ai_completed',
           wordsGenerated: wordCount,
           wordTarget: chapterOutline.wordTarget,
-          details: `Chapter ${chapterNumber} generated: ${wordCount} words`
+          accuracy: Math.round(wordAccuracy),
+          details: `Chapter ${chapterNumber} generated: ${wordCount} words (${Math.round(wordAccuracy)}% of target)`
         });
         
         // Validate continuity if enabled
