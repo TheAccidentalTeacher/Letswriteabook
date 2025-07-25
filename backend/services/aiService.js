@@ -730,18 +730,26 @@ JSON format:
       chapterOutline.wordTarget = Math.round(job.targetWordCount / job.targetChapters);
     }
     
-    // DYNAMIC WORD COUNT ADJUSTMENT - Compensate for previous chapter deficits
+    // DYNAMIC WORD COUNT ADJUSTMENT - Compensate for previous chapter deficits (WITH CAPS)
     if (job.chapters && job.chapters.length > 0) {
       const completedWords = job.chapters.reduce((sum, ch) => sum + (ch.wordCount || 0), 0);
       const expectedWordsAtThisPoint = Math.round((job.targetWordCount / job.targetChapters) * job.chapters.length);
       const deficit = expectedWordsAtThisPoint - completedWords;
+      const baseTarget = Math.round(job.targetWordCount / job.targetChapters);
       
       if (deficit > 500) { // If we're significantly behind
         const chaptersRemaining = job.targetChapters - chapterNumber + 1;
-        const extraWordsNeeded = Math.round(deficit / chaptersRemaining);
-        chapterOutline.wordTarget += extraWordsNeeded;
+        let extraWordsNeeded = Math.round(deficit / chaptersRemaining);
         
-        logger.info(`Chapter ${chapterNumber}: Adding ${extraWordsNeeded} words to compensate for ${deficit} word deficit. New target: ${chapterOutline.wordTarget}`);
+        // CAP THE ADJUSTMENT - Never more than 50% extra words per chapter
+        const maxExtraWords = Math.round(baseTarget * 0.5);
+        extraWordsNeeded = Math.min(extraWordsNeeded, maxExtraWords);
+        
+        // CAP THE TOTAL TARGET - Never exceed 3500 words per chapter
+        const proposedTarget = chapterOutline.wordTarget + extraWordsNeeded;
+        chapterOutline.wordTarget = Math.min(proposedTarget, 3500);
+        
+        logger.info(`Chapter ${chapterNumber}: Adding ${extraWordsNeeded} words (capped) to compensate for ${deficit} word deficit. New target: ${chapterOutline.wordTarget}`);
         
         // Emit deficit tracking
         emitGenerationProgress(jobId, {
@@ -751,9 +759,15 @@ JSON format:
           deficit: deficit,
           adjustment: extraWordsNeeded,
           newTarget: chapterOutline.wordTarget,
-          details: `Adjusting chapter ${chapterNumber} target by +${extraWordsNeeded} words to compensate for running deficit of ${deficit} words`
+          details: `Adjusting chapter ${chapterNumber} target by +${extraWordsNeeded} words (capped at 3500) to compensate for running deficit`
         });
       }
+    }
+    
+    // SAFETY CHECK: Cap all chapter targets at reasonable maximums
+    if (chapterOutline.wordTarget > 3500) {
+      logger.warn(`Chapter ${chapterNumber} target too high (${chapterOutline.wordTarget}), capping at 3500 words`);
+      chapterOutline.wordTarget = 3500;
     }
     
     // Check for very large chapters that might hit token limits
@@ -785,23 +799,22 @@ JSON format:
           // Continue without consistency check - don't block generation
         }
         
-        // Enhanced prompt for word count enforcement on retries
+        // Enhanced prompt for word count enforcement on retries - FOCUS ON QUALITY
         const wordCountEnforcement = retryCount > 0 ? `
 
-⚠️ CRITICAL WORD COUNT REQUIREMENT ⚠️
-This chapter MUST be at least ${Math.round(chapterOutline.wordTarget * 0.8)} words to meet publication standards.
-Previous attempt was too short. You MUST write a full, detailed chapter that reaches the target.
+⚠️ CHAPTER LENGTH IMPROVEMENT REQUIRED ⚠️
+Previous attempt was ${Math.round(((chapterOutline.wordTarget * 0.8) / chapterOutline.wordTarget) * 100)}% too short. Enhance with QUALITY content, not filler.
 
-EXPANSION STRATEGIES FOR ADEQUATE LENGTH:
-- Add detailed scene descriptions and sensory details
-- Include internal character thoughts and emotions
-- Expand dialogue with subtext and character development
-- Add transitional scenes between major events
-- Include character reactions and consequences to events
-- Develop subplot elements that advance the story
-- Add environmental details that enhance mood and setting
+QUALITY ENHANCEMENT STRATEGIES:
+- SHOW DON'T TELL: Convert exposition into scenes with action and dialogue
+- RICH DIALOGUE: Add meaningful conversations that reveal character and advance plot
+- SENSORY DETAILS: Include what characters see, hear, feel, smell to immerse readers
+- CHARACTER THOUGHTS: Add internal monologue that reveals motivations and conflicts
+- ACTION BEATS: Include small actions during dialogue (gestures, movements, reactions)
+- SUBTEXT: Let characters say one thing while meaning another
+- CONSEQUENCE SCENES: Show immediate reactions and results of key events
 
-REQUIRED: Write AT LEAST ${Math.round(chapterOutline.wordTarget * 0.8)} words. Do not stop until you've written a complete, full-length chapter.` : '';
+TARGET: Reach at least ${Math.round(chapterOutline.wordTarget * 0.8)} words through rich storytelling, NOT padding or repetition.` : '';
 
         const chapterPrompt = `
 Write Chapter ${chapterNumber} of the novel "${job.title}".${wordCountEnforcement}
@@ -873,11 +886,10 @@ ADVANCED AUTHENTICITY TECHNIQUES:
 Write approximately ${chapterOutline.wordTarget} words that push established complexity to breaking points and challenge reader expectations while maintaining narrative authenticity.` : `Write approximately ${chapterOutline.wordTarget} words of engaging prose that maintains genre conventions and advances the story effectively.`}
 
 ${retryCount > 0 ? `
-🎯 WORD COUNT ENFORCEMENT: This chapter MUST reach at least ${Math.round(chapterOutline.wordTarget * 0.8)} words. 
-Write detailed scenes, include character development, expand dialogue, and add descriptive elements to reach the target length.
-DO NOT end the chapter early - continue writing until you've reached the required word count.` : ''}
+🎯 QUALITY-FOCUSED LENGTH: Reach ${Math.round(chapterOutline.wordTarget * 0.8)}-${chapterOutline.wordTarget} words through rich storytelling.
+Focus on "show don't tell," meaningful dialogue, and immersive scenes. NO FILLER OR PADDING.` : ''}
 
-Write only the chapter content, no metadata or formatting. Ensure the chapter reaches the target word count through rich storytelling and detailed prose.`;
+Write only the chapter content, no metadata or formatting. Target ${chapterOutline.wordTarget} words of quality prose.`;
 
         // Emit generation progress
         emitGenerationProgress(jobId, {
