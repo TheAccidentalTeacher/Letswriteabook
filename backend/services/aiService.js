@@ -611,55 +611,38 @@ JSON format:
     logger.info(`Initialized ${job.chapters.length} chapter slots for job ${jobId}`);
   }
 
-  // Enhanced chapter generation with proper error handling
+  // SIMPLIFIED chapter generation - NO RETRIES
   async generateChapterWithRetry(jobId, chapterNumber, chapterOutline) {
-    const maxAttempts = 3;
-    let attempts = 0;
-    let lastError = null;
-    
-    while (attempts < maxAttempts) {
-      attempts++;
+    try {
+      // Update chapter status to 'generating'
+      await this.updateChapterStatus(jobId, chapterNumber, 'generating', 1);
       
-      try {
-        // Update chapter status to 'generating'
-        await this.updateChapterStatus(jobId, chapterNumber, 'generating', attempts);
-        
-        const chapter = await this.generateSingleChapter(jobId, chapterNumber, chapterOutline, attempts);
-        
-        // Mark as completed
-        chapter.status = 'completed';
-        chapter.attempts = attempts;
-        
-        return {
-          success: true,
-          chapter: chapter,
-          attempts: attempts
-        };
-        
-      } catch (error) {
-        lastError = error;
-        logger.error(`Attempt ${attempts} failed for chapter ${chapterNumber} in job ${jobId}:`, error);
-        
-        // Update chapter with failure info
-        await this.updateChapterStatus(jobId, chapterNumber, 'generating', attempts, error.message);
-        
-        if (attempts >= maxAttempts) {
-          break;
-        }
-        
-        // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
-      }
+      // Generate chapter exactly once
+      const chapter = await this.generateSingleChapter(jobId, chapterNumber, chapterOutline, 1);
+      
+      // Mark as completed
+      chapter.status = 'completed';
+      chapter.attempts = 1;
+      
+      return {
+        success: true,
+        chapter: chapter,
+        attempts: 1
+      };
+      
+    } catch (error) {
+      logger.error(`Chapter ${chapterNumber} failed for job ${jobId}:`, error.message);
+      
+      // Update chapter with failure info - NO RETRY
+      await this.updateChapterStatus(jobId, chapterNumber, 'failed', 1, error.message);
+      
+      // Return failure result and move on
+      return {
+        success: false,
+        error: error.message,
+        attempts: 1
+      };
     }
-    
-    // All attempts failed
-    await this.updateChapterStatus(jobId, chapterNumber, 'failed', attempts, lastError.message);
-    
-    return {
-      success: false,
-      error: lastError.message,
-      attempts: attempts
-    };
   }
 
   // Update chapter status in database
