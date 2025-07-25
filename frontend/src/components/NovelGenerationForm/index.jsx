@@ -89,6 +89,11 @@ function NovelGenerationForm() {
   return (
     <div className="novel-generation-form">
       <h2>Generate a Novel</h2>
+      <div style={{ marginBottom: '20px' }}>
+        <a href="/api/admin/kill-all-jobs" target="_blank" style={{ color: '#dc3545', textDecoration: 'none', fontSize: '14px' }}>
+          🔧 Admin: Kill All Jobs
+        </a>
+      </div>
       {error && <div className="error-message">{error}</div>}
       
       <form onSubmit={handleSubmit}>
