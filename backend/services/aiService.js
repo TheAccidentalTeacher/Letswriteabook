@@ -799,31 +799,15 @@ JSON format:
           // Continue without consistency check - don't block generation
         }
         
-        // Enhanced prompt for word count enforcement on retries - FOCUS ON QUALITY
-        const wordCountEnforcement = retryCount > 0 ? `
-
-⚠️ CHAPTER LENGTH IMPROVEMENT REQUIRED ⚠️
-Previous attempt was ${Math.round(((chapterOutline.wordTarget * 0.8) / chapterOutline.wordTarget) * 100)}% too short. Enhance with QUALITY content, not filler.
-
-QUALITY ENHANCEMENT STRATEGIES:
-- SHOW DON'T TELL: Convert exposition into scenes with action and dialogue
-- RICH DIALOGUE: Add meaningful conversations that reveal character and advance plot
-- SENSORY DETAILS: Include what characters see, hear, feel, smell to immerse readers
-- CHARACTER THOUGHTS: Add internal monologue that reveals motivations and conflicts
-- ACTION BEATS: Include small actions during dialogue (gestures, movements, reactions)
-- SUBTEXT: Let characters say one thing while meaning another
-- CONSEQUENCE SCENES: Show immediate reactions and results of key events
-
-TARGET: Reach at least ${Math.round(chapterOutline.wordTarget * 0.8)} words through rich storytelling, NOT padding or repetition.` : '';
-
+        // Simple, clean chapter prompt - no retry complexity
         const chapterPrompt = `
-Write Chapter ${chapterNumber} of the novel "${job.title}".${wordCountEnforcement}
+Write Chapter ${chapterNumber} of the novel "${job.title}".
 
 CHAPTER OUTLINE:
 Title: ${chapterOutline.title}
 Summary: ${chapterOutline.summary}
 Key Events: ${chapterOutline.keyEvents.join(', ')}
-Target Word Count: ${chapterOutline.wordTarget}${retryCount > 0 ? ` (MINIMUM REQUIRED: ${Math.round(chapterOutline.wordTarget * 0.8)} words)` : ''}${job.humanLikeWriting ? `
+Target Word Count: ${chapterOutline.wordTarget}${job.humanLikeWriting ? `
 Human-Like Elements: ${JSON.stringify(chapterOutline.humanLikeElements || {}, null, 1)}` : ''}
 
 NOVEL CONTEXT:
@@ -885,10 +869,6 @@ ADVANCED AUTHENTICITY TECHNIQUES:
 
 Write approximately ${chapterOutline.wordTarget} words that push established complexity to breaking points and challenge reader expectations while maintaining narrative authenticity.` : `Write approximately ${chapterOutline.wordTarget} words of engaging prose that maintains genre conventions and advances the story effectively.`}
 
-${retryCount > 0 ? `
-🎯 QUALITY-FOCUSED LENGTH: Reach ${Math.round(chapterOutline.wordTarget * 0.8)}-${chapterOutline.wordTarget} words through rich storytelling.
-Focus on "show don't tell," meaningful dialogue, and immersive scenes. NO FILLER OR PADDING.` : ''}
-
 Write only the chapter content, no metadata or formatting. Target ${chapterOutline.wordTarget} words of quality prose.`;
 
         // Emit generation progress
@@ -900,49 +880,24 @@ Write only the chapter content, no metadata or formatting. Target ${chapterOutli
           details: `Generating chapter ${chapterNumber}: "${chapterOutline.title}"`
         });
 
-        // Dynamic token allocation based on word target and retry attempt
-        let maxTokens;
-        if (retryCount > 0) {
-          // More aggressive token allocation for retries
-          maxTokens = Math.min(16000, Math.max(6000, Math.round(chapterOutline.wordTarget * 2.2)));
-        } else {
-          // Standard allocation for first attempt  
-          maxTokens = Math.min(16000, Math.max(4000, Math.round(chapterOutline.wordTarget * 1.6)));
-        }
+        // Simple token allocation - no retry complexity
+        const maxTokens = Math.min(16000, Math.max(4000, Math.round(chapterOutline.wordTarget * 1.6)));
 
         const response = await this.openai.chat.completions.create({
           model: 'gpt-4o',
           messages: [{ role: 'user', content: chapterPrompt }],
-          temperature: retryCount > 0 ? 0.8 : 0.7, // Slightly higher creativity for retries
+          temperature: 0.7,
           max_tokens: maxTokens
         });
         
         const chapterContent = response.choices[0].message.content.trim();
         const wordCount = this.countWords(chapterContent);
         
-        // WORD COUNT VALIDATION - Check if we're significantly under target
+        // Calculate word accuracy for reporting (no retry logic)
         const wordTarget = chapterOutline.wordTarget;
         const wordAccuracy = (wordCount / wordTarget) * 100;
-        const minimumAcceptable = 65; // Must hit at least 65% of target
         
-        if (wordAccuracy < minimumAcceptable && retryCount < maxRetries) {
-          logger.warn(`Chapter ${chapterNumber} word count too low: ${wordCount}/${wordTarget} words (${Math.round(wordAccuracy)}%). Retrying with enhanced prompts.`);
-          
-          // Emit retry notification
-          emitGenerationProgress(jobId, {
-            phase: 'chapter_generation',
-            chapterNumber,
-            status: 'word_count_retry',
-            wordsGenerated: wordCount,
-            wordTarget: chapterOutline.wordTarget,
-            accuracy: Math.round(wordAccuracy),
-            details: `Chapter ${chapterNumber} too short (${wordCount}/${wordTarget} words). Retrying with enhanced prompts.`
-          });
-          
-          throw new Error(`Word count too low: ${wordCount}/${wordTarget} words (${Math.round(wordAccuracy)}%). Retrying.`);
-        }
-        
-        // Emit generation completion
+        // Emit generation completion - always accept what we get
         emitGenerationProgress(jobId, {
           phase: 'chapter_generation',
           chapterNumber,
