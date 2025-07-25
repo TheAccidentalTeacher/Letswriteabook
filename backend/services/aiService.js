@@ -13,7 +13,6 @@ const humanWritingEnhancements = require('../shared/humanWritingEnhancements');
 const universalFramework = require('../shared/universalHumanWritingFramework');
 const advancedRefinements = require('../shared/advancedHumanWritingRefinements');
 const ContinuityGuardian = require('../shared/continuityGuardian');
-// const monitoringService = require('./monitoringService'); // Removed - was causing crashes
 
 class AIService {
   constructor() {
@@ -46,10 +45,6 @@ class AIService {
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
 
-    // Initialize monitoring for this job
-    // monitoringService.initializeJob(jobId); // Removed - was causing crashes
-    logger.info(`Monitoring service disabled for job ${jobId}`);
-    
     // Initialize continuity guardian for story consistency tracking
     const continuityGuardian = new ContinuityGuardian(jobId);
     
@@ -85,9 +80,6 @@ class AIService {
       
       // Remove from active jobs
       this.activeJobs.delete(jobId);
-      
-      // Clean up monitoring data (but preserve final state for viewing)
-      // Note: We don't clean up here so users can review the final monitoring data
       
       emitJobUpdate(jobId, {
         status: 'completed',
