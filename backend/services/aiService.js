@@ -12,7 +12,6 @@ const genreInstructions = require('../shared/genreInstructions');
 const humanWritingEnhancements = require('../shared/humanWritingEnhancements');
 const universalFramework = require('../shared/universalHumanWritingFramework');
 const advancedRefinements = require('../shared/advancedHumanWritingRefinements');
-const ContinuityGuardian = require('../shared/continuityGuardian');
 // const monitoringService = require('./monitoringService'); // Removed - was causing crashes
 
 class AIService {
@@ -26,9 +25,6 @@ class AIService {
     });
     
     this.activeJobs = new Map();
-    
-    // Initialize Continuity Guardian per job (moved to generateNovel method)
-    this.continuityGuardians = new Map();
     
     // Cost tracking per model (prices as of 2024)
     // Model limits: gpt-4o/gpt-4o-mini context: 128K tokens, output: 16K tokens
@@ -49,12 +45,6 @@ class AIService {
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
 
-    // Initialize Continuity Guardian for this job
-    if (job.humanLikeWriting && job.continuityGuardian !== false) {
-      this.continuityGuardians.set(jobId, new ContinuityGuardian(jobId));
-      logger.info(`Continuity Guardian initialized for job ${jobId}`);
-    }
-    
     // Initialize monitoring for this job
     // monitoringService.initializeJob(jobId); // Removed - was causing crashes
     logger.info(`Monitoring service disabled for job ${jobId}`);
@@ -731,27 +721,6 @@ JSON format:
       chapterOutline.wordTarget = Math.min(chapterOutline.wordTarget, 8000);
     }
     
-    // Generate continuity checking prompt if enabled
-    let continuityPrompt = '';
-    const continuityGuardian = this.continuityGuardians.get(jobId);
-    if (job.humanLikeWriting && job.continuityGuardian !== false && continuityGuardian) {
-      try {
-        const previousChapters = job.chapters.slice(0, chapterNumber - 1);
-        continuityPrompt = continuityGuardian.generateContinuityPrompt(chapterOutline, previousChapters);
-        
-        // Emit generation progress
-        emitGenerationProgress(jobId, {
-          phase: 'chapter_generation',
-          chapterNumber,
-          status: 'continuity_check_prepared',
-          details: `Continuity prompt generated for chapter ${chapterNumber}`
-        });
-      } catch (error) {
-        logger.warn(`Continuity Guardian error for chapter ${chapterNumber}: ${error.message}`);
-        // Continue without continuity checking rather than fail
-      }
-    }
-    
     const maxRetries = 3;
     let retryCount = 0;
     
@@ -766,8 +735,6 @@ JSON format:
         
         const chapterPrompt = `
 Write Chapter ${chapterNumber} of the novel "${job.title}".
-
-${continuityPrompt}
 
 CHAPTER OUTLINE:
 Title: ${chapterOutline.title}

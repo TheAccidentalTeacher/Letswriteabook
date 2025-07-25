@@ -1,53 +1,65 @@
-// advancedHumanWritingRefinements.js - Level 5 Principles for Deep Human Authenticity
-// Based on 4th iteration analysis of "Copper Stars: The McCarthy Expeditions"
-// Moves beyond adding complexity to deepening and challenging existing complexity
+// advancedHumanWritingRefinements.js - Advanced Techniques for Peak Human Authenticity
+// Streamlined to focus on the three key quality metrics needing improvement
 
 const advancedHumanWritingRefinements = {
-  // Evolution from Universal Framework to Advanced Refinement
+  // ADVANCED LEVEL TECHNIQUES - For experienced stories that need that extra 10-15%
   philosophy: {
-    evolution: "From adding complexity to deepening and challenging existing complexity",
-    focus: "Push established elements to breaking points and subvert reader expectations",
-    goal: "Achieve narrative sophistication that is deeply and authentically human"
+    purpose: "Elevate good writing to exceptional through sophisticated emotional and narrative techniques",
+    application: "Use after basic human authenticity is established"
   },
 
-  // Level 5 Advanced Principles
-  advancedPrinciples: {
-    
-    // I. Push Factions to Breaking Point
-    factionBreakingPoint: {
-      principle: "Create internal factions that matter through direct, consequential conflict",
-      reasoning: "Successfully created factions, now make them matter with real consequences",
-      
-      implementation: {
-        engineerSabotage: {
-          description: "Have dissenting faction actively sabotage protagonist's plans believing they're doing right",
-          examples: [
-            "Miners' Collective sabotages defense believing it threatens their access",
-            "Medical faction withholds resources believing violence is wrong approach",
-            "Engineers disable critical systems thinking negotiations are better"
-          ],
-          prompt: "Create scenario where ally faction sabotages main character's plan from good intentions, creating no-villain conflict"
-        },
-        
-        forceHardChoiceForLeader: {
-          description: "Leader must choose between crushing dissent or risking failure through negotiation",
-          consequences: [
-            "Iron fist approach mirrors corporate past and alienates community",
-            "Negotiation approach risks mission failure and more casualties",
-            "Any choice creates lasting division and consequences"
-          ],
-          prompt: "Force leader into choice between authoritarian control and collaborative risk, with significant lasting consequences either way"
-        }
-      }
-    },
+  // LEVEL 5 TECHNIQUES - For pushing quality metrics to 85%+
+  level5Prompts: {
+    analysis: `
+ADVANCED CREATIVE INNOVATION:
+- Plan story revelations that force readers to reconsider earlier events
+- Design character competencies that become liabilities in new situations  
+- Create scenarios where helping causes harm, and abandonment enables growth
+- Plan moments where characters discover their fundamental assumptions are wrong`,
 
-    // II. Introduce Tangible Costs for Powers
-    powerCosts: {
-      principle: "Established 'magic systems' need clear, painful costs to prevent deus ex machina",
-      reasoning: "Powers are established, now give them meaningful limitations and prices",
-      
-      implementation: {
-        physicalMentalToll: {
+    outline: `
+SOPHISTICATED NARRATIVE DESIGN:
+- Structure chapters so character decisions in early chapters limit options in later ones
+- Plan subplot convergence that creates impossible choice scenarios
+- Design story momentum where slowing down reveals important character truths
+- Create chapter sequences where each revelation recontextualizes the previous one`,
+
+    chapter: `
+PEAK HUMAN AUTHENTICITY TECHNIQUES:
+
+EMOTIONAL SOPHISTICATION:
+- Characters experience shame about feeling relief, or guilt about justified anger
+- Show people lying to themselves about their own motivations
+- Include moments where characters recognize patterns in their own behavior
+- Let characters be right about important things for completely wrong reasons
+
+DIALOGUE MASTERY:
+- Characters misunderstand each other's fundamental point while agreeing on details  
+- Important information emerges through what people avoid saying
+- Show characters realizing they've been talking past each other for entire conversations
+- Include dialogue where subtext contradicts text, but both are emotionally true
+
+NARRATIVE PRECISION:
+- Each scene should advance plot, develop character, AND reveal world simultaneously
+- Include details that seem irrelevant but create emotional resonance
+- Show characters noticing different aspects of same situation based on their emotional state
+- Create moments where plot logic and emotional logic point in different directions
+
+ADVANCED CONFLICT DESIGN:
+- Best solution requires characters to act against their established personality
+- Success in one area automatically creates failure in another area that matters
+- Character growth requires abandoning something that made them likeable
+- Resolution creates new problems that are logical extensions of the solution
+
+SOPHISTICATED WORLD INTERACTION:
+- Characters' emotional states affect their perception of environmental details
+- World elements reflect and amplify internal character conflicts
+- Setting details that characters notice reveal their psychological priorities
+- Physical environment that responds to character choices in unexpected ways`
+  }
+};
+
+module.exports = advancedHumanWritingRefinements;
           description: "Major power use causes memory fragmentation, sensory overload, physical exhaustion",
           examples: [
             "Nanite user suffers memory loss as human brain struggles with alien data",

@@ -1,53 +1,69 @@
-// universalHumanWritingFramework.js - A Universal Framework for Humanizing AI-Generated Fiction
-// Based on comprehensive principles of character development, plot structure, and prose authenticity
+// universalHumanWritingFramework.js - Streamlined Framework for Human Authenticity
+// Redesigned to work cohesively with humanWritingEnhancements.js
+// Focus: Provide structural foundation for the three key quality areas
 
 const universalHumanWritingFramework = {
-  // Core framework principles
+  // FOUNDATION: What makes writing feel human vs. AI-generated
   corePhilosophy: {
-    primary: "AI excels at pattern recognition but struggles with intentional messiness and contradictory human creativity",
-    goal: "Bridge the gap between AI efficiency and human authenticity through structured creative chaos"
+    primary: "Human stories are imperfect, contradictory, and emotionally honest",
+    secondary: "AI excels at patterns; humans excel at meaningful disruption of patterns"
   },
 
-  // I. Principles of Character Development
-  characterDevelopment: {
-    embraceCharacterFallibility: {
-      principle: "Perfect characters are boring and unrelatable. Human stories are defined by struggle and mistakes.",
-      implementation: {
-        assignCoreFlaws: {
-          description: "Give each main character a significant flaw that directly impacts decisions",
-          examples: ["pride", "insecurity", "impulsiveness", "stubbornness", "fear of intimacy", "arrogance"],
-          prompt: "Assign each character a core psychological flaw that will cause them to make poor decisions"
-        },
-        engineerMeaningfulFailure: {
-          description: "Design scenarios where character's core flaw causes failure with lasting consequences",
-          examples: [
-            "Detective's arrogance leads them to dismiss crucial clue",
-            "Romantic lead's fear of intimacy causes them to sabotage relationship",
-            "Leader's pride prevents them from accepting help when desperately needed"
-          ],
-          prompt: "Create failures that stem from character flaws and have real, lasting story consequences"
-        }
-      }
-    },
+  // STRUCTURAL GUIDANCE for the three key quality areas
+  promptEnhancements: {
+    analysis: `
+STORYTELLING FOUNDATION:
+- Plan story structure around character emotional journeys, not just plot events
+- Identify moments where characters' internal conflicts create external complications
+- Design story world with consistent rules that characters will break or challenge
+- Plan for multiple valid interpretations of key events and character motivations`,
 
-    developMultiDimensionalAntagonists: {
-      principle: "Villains who are 'evil for evil's sake' are caricatures. Compelling antagonists have understandable motivations.",
-      implementation: {
-        heroOfTheirOwnStory: {
-          description: "Write antagonist's motivation from perspective where they are the protagonist",
-          prompt: "What does the antagonist believe they are saving or achieving? How do they justify their actions?"
-        },
-        giveThemPointOfView: {
-          description: "Dedicate scenes to antagonist's perspective showing personal life, fears, justifications",
-          prompt: "Show the antagonist's humanity through their personal struggles and believable motivations"
-        }
-      }
-    },
+    outline: `
+CHAPTER-LEVEL STRUCTURE:
+- Each chapter should change at least one character relationship
+- Plan scenes that serve character development even if they slow plot progression
+- Include chapters where characters face consequences from previous decisions
+- Design chapter endings that raise new questions rather than providing answers`,
 
-    generateConflictFromCharacter: {
-      principle: "Most memorable conflicts are internal or interpersonal, not just external plot events",
-      implementation: {
-        createValueOppositions: {
+    chapter: `
+SCENE-LEVEL EXECUTION:
+- Root every scene in specific sensory details that affect character behavior
+- Show character thoughts that contradict their spoken words
+- Include physical reality (weather, exhaustion, hunger) that influences decisions
+- Create moments where characters surprise themselves with their own responses
+
+EMOTIONAL TRUTH PRINCIPLES:
+- Characters can feel grateful and resentful about the same thing
+- Show competent people being incompetent outside their expertise
+- Include moments where characters fail despite making logical choices
+- Let characters change their minds about important things for valid reasons`
+  },
+
+  // IMPLEMENTATION GUIDELINES - How to execute the enhanced system
+  executionPrinciples: {
+    emotionalAuthenticity: {
+      principle: "Real emotions are layered and contradictory",
+      application: "In each scene, identify the surface emotion and the hidden emotion underneath"
+    },
+    
+    conflictGeneration: {
+      principle: "Best conflicts emerge from character values, not external obstacles",
+      application: "Create situations where characters must choose between two things they value"
+    },
+    
+    consequenceDesign: {
+      principle: "Every character choice should affect future story possibilities",
+      application: "Track how current chapter decisions will limit or expand options in later chapters"
+    },
+    
+    surpriseCreation: {
+      principle: "Surprise through character revelation, not random plot events",
+      application: "Reveal character traits that recontextualize previous actions"
+    }
+  }
+};
+
+module.exports = universalHumanWritingFramework;
           description: "Design main cast with conflicting core values",
           examples: [
             "Order vs Freedom",

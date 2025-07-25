@@ -6,10 +6,6 @@ import { getJobStatus } from '../../services/api';
 import ProgressPhase from './ProgressPhase';
 import ChapterProgress from './ChapterProgress';
 import CostTracker from './CostTracker';
-import StoryBibleViewer from '../MonitoringDashboard/StoryBibleViewer';
-import ContinuityAlertsPanel from '../MonitoringDashboard/ContinuityAlertsPanel';
-import QualityMetricsDisplay from '../MonitoringDashboard/QualityMetricsDisplay';
-import AIDecisionStream from '../MonitoringDashboard/AIDecisionStream';
 import '../../styles/GenerationProgress.css';
 
 function GenerationProgress() {
@@ -95,20 +91,6 @@ function GenerationProgress() {
               <p>✅ Writing: {state.progress?.chaptersCompleted || 0} chapters completed</p>
             </div>
           </div>
-          
-          <div className="progress-monitoring">
-            <div className="monitoring-tabs">
-              <div className="monitoring-section">
-                <h3>📊 Final Quality Metrics</h3>
-                <QualityMetricsDisplay jobId={jobId} />
-              </div>
-
-              <div className="monitoring-section">
-                <h3>📚 Story Bible</h3>
-                <StoryBibleViewer jobId={jobId} />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -165,31 +147,6 @@ function GenerationProgress() {
               chapterGeneration={state.modelUsage?.chapterGeneration}
             />
           )}
-        </div>
-
-        {/* Right side - Monitoring dashboard */}
-        <div className="progress-monitoring">
-          <div className="monitoring-tabs">
-            <div className="monitoring-section">
-              <h3>📊 Quality Metrics</h3>
-              <QualityMetricsDisplay jobId={jobId} />
-            </div>
-
-            <div className="monitoring-section">
-              <h3>📚 Story Bible</h3>
-              <StoryBibleViewer jobId={jobId} />
-            </div>
-
-            <div className="monitoring-section">
-              <h3>⚠️ Continuity Alerts</h3>
-              <ContinuityAlertsPanel jobId={jobId} />
-            </div>
-
-            <div className="monitoring-section">
-              <h3>🤖 AI Decisions</h3>
-              <AIDecisionStream jobId={jobId} />
-            </div>
-          </div>
         </div>
       </div>
     </div>

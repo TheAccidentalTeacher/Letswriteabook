@@ -1,303 +1,219 @@
-// humanWritingEnhancements.js - Configuration for making AI-generated novels feel more human
-// Based on analysis feedback for "Copper Stars: The McCarthy Expeditions"
-// Updated with expanded synopsis feedback addressing specific AI patterns to avoid
-// Integrated with Universal Framework for Humanizing AI-Generated Fiction
+// humanWritingEnhancements.js - Unified Human Writing Enhancement System
+// Redesigned based on quality metrics analysis: Focus on Creative Innovation (65%→85%), 
+// Human-Like Writing (75%→90%), and Narrative Complexity (70%→85%)
 
 const humanWritingEnhancements = {
-  // Core improvement areas identified in analysis
-  improvements: {
-    structuralVariety: {
-      enabled: true,
-      description: "Vary chapter lengths, structures, and pacing",
+  // CORE PHILOSOPHY: Less is more - focus on what works, not what to avoid
+  philosophy: {
+    primary: "Create authentic human storytelling through purposeful imperfection and emotional truth",
+    approach: "Quality over complexity - fewer, better-executed elements"
+  },
+
+  // I. CREATIVE INNOVATION ENGINE (Target: 85%)
+  // Current weakness: 65% - needs dramatic improvement
+  creativeInnovation: {
+    unexpectedMoments: {
+      description: "Surprise readers and characters alike with genuine twists",
       techniques: [
-        "Mix action-packed and reflective chapters",
-        "Vary chapter lengths significantly",
-        "Include chapters told through logs, messages, or different POVs",
-        "Create uneven pacing that mirrors human storytelling"
+        "Characters discover something that changes their understanding of the world",
+        "Reveal information that recontextualizes earlier events",
+        "Show competent characters being genuinely wrong about important things",
+        "Create situations where the 'obvious' solution makes things worse"
       ]
     },
     
-    characterComplexity: {
-      enabled: true,
-      description: "Add internal conflicts and surprising character choices",
+    subversiveChoices: {
+      description: "Break reader expectations in meaningful ways",
       techniques: [
-        "Characters make unexpected but believable decisions",
-        "Internal team conflicts that aren't easily resolved", 
-        "Characters fail meaningfully without immediate plot advancement",
-        "Morally ambiguous choices with no clear 'right' answer"
+        "The quiet character becomes the most decisive in crisis",
+        "The antagonist's plan succeeds but creates unexpected consequences",
+        "The love interest chooses their career/mission over romance",
+        "The mentor figure has crucial blind spots or outdated knowledge"
       ]
     },
     
-    dialogueAuthenticity: {
-      enabled: true,
-      description: "Create distinctive speech patterns and subtext",
+    organicComplications: {
+      description: "Problems that emerge naturally from character choices",
       techniques: [
-        "Each character has unique verbal tics and vocabulary",
-        "Conversations with subtext - characters say one thing, mean another",
-        "Dialogue that reveals character through word choice patterns",
-        "Organic humor that emerges from situations naturally"
-      ]
-    },
-    
-    worldBuilding: {
-      enabled: true,
-      description: "Add cultural depth and mundane details",
-      techniques: [
-        "In-world songs, stories, sayings that characters reference",
-        "Mundane details that don't advance plot but feel lived-in",
-        "Minor equipment failures and everyday irritations",
-        "Cultural references specific to the fictional world"
-      ]
-    },
-    
-    narrativeComplexity: {
-      enabled: true,
-      description: "Embrace messiness and unresolved elements",
-      techniques: [
-        "Leave some plot threads deliberately unresolved",
-        "Convenient resolutions avoided in favor of messy realism",
-        "Protagonist genuinely surprised or wrong about important things",
-        "Unexpected consequences that complicate rather than resolve"
-      ]
-    },
-    
-    sensoryVariability: {
-      enabled: true,
-      description: "Add inconsistent perception and varied descriptions",
-      techniques: [
-        "Characters perceive same events differently",
-        "Occasional sensory misinterpretation as humans experience",
-        "Avoid repetitive character descriptions and phrases",
-        "Vary prose style subtly based on character focus"
-      ]
-    },
-    
-    antagonistDepth: {
-      enabled: true,
-      description: "Develop complex antagonists with understandable motivations",
-      techniques: [
-        "Antagonists with relatable (if misguided) motivations",
-        "Corporate/institutional enemies with human faces and reasons",
-        "Villains who make valid points even when wrong overall",
-        "Opposition that challenges heroes' worldview meaningfully"
-      ]
-    },
-    
-    // NEW: Based on expanded synopsis feedback
-    characterFailures: {
-      enabled: true,
-      description: "Include meaningful failures that don't advance plot but reveal character",
-      techniques: [
-        "Characters make mistakes with lasting consequences",
-        "Show characters failing at important moments without easy recovery",
-        "Include physical and emotional failures that create genuine setbacks",
-        "Failures that force character growth or change relationships"
-      ]
-    },
-    
-    interpersonalFriction: {
-      enabled: true,
-      description: "Create deeper conflicts between characters that persist",
-      techniques: [
-        "Fundamental disagreements about values or approaches",
-        "Personal friction that doesn't resolve easily",
-        "Trust issues that span multiple chapters",
-        "Characters who genuinely dislike aspects of each other"
-      ]
-    },
-    
-    mundaneFrustrations: {
-      enabled: true,
-      description: "Add everyday annoyances and complications",
-      techniques: [
-        "Equipment breaking at crucial moments",
-        "Miscommunications that create real problems",
-        "Physical discomfort and exhaustion affecting decisions",
-        "Small irritations that compound into bigger issues"
-      ]
-    },
-    
-    sensoryInconsistency: {
-      enabled: true,
-      description: "Show characters perceiving same environment differently",
-      techniques: [
-        "Different characters notice different details in same scene",
-        "Varied reactions to same stimuli based on background",
-        "Conflicting interpretations of events or situations",
-        "Personal biases affecting perception and memory"
-      ]
-    },
-    
-    backstoryContradictions: {
-      enabled: true,
-      description: "Create complex character histories with contradictory elements",
-      techniques: [
-        "Past actions that conflict with current values",
-        "Skills or knowledge that seem inconsistent with background",
-        "Relationships that don't fit expected patterns",
-        "Hidden aspects of personality revealed gradually"
+        "Success in one area creates problems in another",
+        "Character strengths become weaknesses in new situations",
+        "Solutions to immediate problems create bigger long-term issues",
+        "Help arrives but comes with unacceptable conditions"
       ]
     }
   },
 
-  // Specific prompt additions for each writing phase
+  // II. HUMAN-LIKE AUTHENTICITY (Target: 90%)
+  // Current strength: 75% - build on this foundation
+  humanAuthenticity: {
+    emotionalComplexity: {
+      description: "Real human emotions are contradictory and layered",
+      techniques: [
+        "Characters feel relief and guilt simultaneously",
+        "Show anger that masks fear or sadness",
+        "Characters want things that conflict with their values",
+        "Pride and shame about the same achievement"
+      ]
+    },
+    
+    conversationalTruth: {
+      description: "How people actually talk vs. how they think they talk",
+      techniques: [
+        "Characters interrupt, change subjects, misunderstand",
+        "Important conversations happen at bad times",
+        "People avoid saying what they really mean",
+        "Humor emerges from awkwardness or stress"
+      ]
+    },
+    
+    physicalReality: {
+      description: "Bodies are messy and inconvenient",
+      techniques: [
+        "Exhaustion affects judgment and patience",
+        "Hunger makes people irritable at wrong moments",
+        "Physical discomfort during important conversations",
+        "Illness or injury that isn't heroic or meaningful"
+      ]
+    }
+  },
+
+  // III. NARRATIVE COMPLEXITY (Target: 85%)
+  // Current performance: 70% - needs focused improvement
+  narrativeComplexity: {
+    layeredConsequences: {
+      description: "Every choice creates ripple effects",
+      techniques: [
+        "Small early decisions have major later consequences",
+        "Characters' past actions return to complicate present",
+        "Solutions create new problems for different characters",
+        "Success requires sacrificing something important"
+      ]
+    },
+    
+    ambiguousOutcomes: {
+      description: "Real resolution is messy and incomplete",
+      techniques: [
+        "Victory comes with genuine costs",
+        "Problems get solved but relationships change",
+        "Characters achieve goals but question if they were worth it",
+        "New information reframes previous 'victories'"
+      ]
+    },
+    
+    interconnectedPlots: {
+      description: "Multiple story threads that influence each other",
+      techniques: [
+        "Character B's subplot affects Character A's main story",
+        "Background worldbuilding becomes plot-relevant",
+        "Minor characters have their own agenda that matters",
+        "Different character goals create natural conflict"
+      ]
+    }
+  },
+
+  // UNIFIED PROMPT SYSTEM - Consolidate all guidance into clear, actionable instructions
   prompts: {
     analysis: {
       humanLikeAdditions: `
-HUMAN-LIKE WRITING REQUIREMENTS:
-- Plan for internal conflicts between main characters that won't resolve easily
-- Identify opportunities for characters to fail meaningfully without plot advancement
-- Consider morally ambiguous situations with no clear right answers
-- Plan distinctive speech patterns and verbal tics for each major character
-- Include mundane, lived-in world details that don't advance plot
-- Design at least 2-3 unresolved elements to leave open
-- Ensure antagonist has understandable (if wrong) motivations
-- Plan for interpersonal friction based on fundamental value differences
-- Create backstories with contradictory elements that surprise readers`
+CREATIVE INNOVATION PLANNING:
+- Identify 2-3 moments where competent characters will be genuinely wrong
+- Plan one major plot element that subverts genre expectations
+- Design consequences where success creates new, different problems
+
+HUMAN AUTHENTICITY SETUP:
+- Give each character one physical trait that affects their behavior (chronic pain, insomnia, food allergies)
+- Plan contradictory emotions for major story moments
+- Identify where characters will avoid saying what they really mean
+
+NARRATIVE COMPLEXITY FOUNDATION:
+- Connect at least 3 seemingly separate plot elements
+- Plan how each character's background creates current complications
+- Design victory conditions that require meaningful sacrifice`
     },
     
     outline: {
       humanLikeAdditions: `
-STRUCTURAL VARIETY REQUIREMENTS:
-- Vary chapter lengths significantly (some short, some long)
-- Mix chapter types: action, reflection, dialogue-heavy, description-heavy, logs/messages
-- Plan uneven pacing with slower moments that build character
-- Ensure some chapters end without clear resolution or neat closure
-- Plan at least one major plot twist that genuinely surprises characters
-- Include meaningful failures that create genuine setbacks without easy recovery
-- Create chapters where equipment fails or miscommunications cause problems
-- Plan for different characters to perceive same events differently
-- Include at least one chapter focused on mundane frustrations and complications
-- Avoid formulaic chapter structures (setup-conflict-resolution pattern)`
+CHAPTER STRUCTURE INNOVATION:
+- Vary chapter formats: some dialogue-heavy, some action, some internal reflection
+- Plan 2-3 chapters where the main plot takes a backseat to character development
+- Include at least one chapter that ends with a question, not an answer
+
+AUTHENTIC PACING:
+- Slow down for moments that matter emotionally, even if they don't advance plot
+- Plan scenes where characters just exist together without dramatic conflict
+- Include mundane frustrations that compound into bigger problems
+
+COMPLEX PLOT WEAVING:
+- Each chapter should advance 2-3 different story threads
+- Minor character decisions should affect major character options
+- Plan how background worldbuilding will become plot-relevant`
     },
     
     chapter: {
       humanLikeAdditions: `
-HUMAN-LIKE CHAPTER WRITING REQUIREMENTS:
+CREATIVE INNOVATION IN EXECUTION:
+- Include one moment that surprises both character and reader
+- Show a character being wrong about something they're supposed to know
+- Create a problem that gets worse when characters try the 'right' solution
+- Let character strengths become disadvantages in this specific situation
 
-CHARACTER AUTHENTICITY:
-- Each character should have distinctive speech patterns, verbal tics, and vocabulary choices
-- Include subtext in dialogue - characters saying one thing but meaning another
-- Show characters making unexpected but believable choices that reveal contradictions
-- Avoid repetitive character descriptions (same traits mentioned repeatedly)
-- Include genuine interpersonal friction that doesn't resolve easily
-- Show characters failing meaningfully without immediate plot advancement
+HUMAN AUTHENTICITY IN SCENES:
+- Characters feel multiple contradictory emotions about important events
+- Include physical discomfort that affects how characters interact
+- Show people failing to communicate what they actually mean
+- Let exhaustion, hunger, or discomfort influence character decisions
 
-NARRATIVE REALISM:
-- Add mundane frustrations: equipment breaking, miscommunications, physical discomfort
-- Include sensory inconsistencies - characters perceiving same events differently
-- Avoid over-explaining themes or having characters speak too philosophically
-- Let conflicts be messy and not resolve too neatly or conveniently
-- Show genuine surprise for protagonists - they should be caught off-guard
-- Avoid too many profound or scripted-sounding conversations
+NARRATIVE COMPLEXITY IN WRITING:
+- Every scene should serve multiple story purposes
+- Character actions should have consequences beyond immediate scene
+- Include details that seem minor but will matter later
+- Show how this chapter's events affect different characters differently
 
-WORLD DEPTH:
-- Reference specific in-world cultural elements (songs, sayings, shared history)
-- Include organic humor that emerges naturally from situations
-- Add small equipment failures or everyday complications at inconvenient times
-- Show characters dealing with mundane annoyances that compound
-- Vary sensory details - different smells, tastes, textures, sounds
+DIALOGUE AUTHENTICITY:
+- People interrupt each other and talk past each other
+- Important conversations happen at inconvenient times
+- Characters say things they don't mean when stressed or tired
+- Include subtext - what people don't say matters as much as what they do
 
-STRUCTURAL VARIETY:
-- Avoid formulaic chapter structure (setup-conflict-resolution)
-- Vary prose style based on which character is the focus
-- Include unexpected moments that don't serve the main plot
-- End with something unresolved or complicating rather than neat closure
-- Break expected narrative patterns with genuine surprises
-- Mix chapter formats - some action-heavy, others reflective, some through logs/messages
-
-ANTAGONIST COMPLEXITY:
-- Make antagonists more complex with understandable motivations beyond simple greed
-- Show opposition that makes valid points even when wrong overall
-- Create conflicts where there's no clear "right" answer
-- Develop institutional/corporate enemies with human faces and relatable reasons`
+EMOTIONAL REALISM:
+- Characters can be proud and ashamed of the same thing
+- Show anger that's really fear, or sadness that presents as irritation
+- Characters want things that conflict with their stated values
+- Relief and guilt can coexist after difficult decisions`
     }
   },
 
-  // Quality checks for human-like writing
-  qualityMetrics: {
-    structuralVariety: {
-      checkRepetitiveChapterStructure: true,
-      checkChapterLengthVariation: true,
-      checkPacingVariation: true,
-      avoidFormulaic: true
+  // QUALITY TARGETS - Specific, measurable improvements
+  qualityTargets: {
+    creativeInnovation: {
+      current: 65,
+      target: 85,
+      keyMetrics: [
+        "Genuine surprises per chapter",
+        "Expectations subverted meaningfully", 
+        "Character competence challenged believably"
+      ]
     },
     
-    characterAuthenticity: {
-      checkDistinctiveDialogue: true,
-      checkUnpredictableChoices: true,
-      checkInternalConflicts: true,
-      avoidRepetitiveDescriptions: true,
-      checkGenuineFailures: true
+    humanAuthenticity: {
+      current: 75,
+      target: 90,
+      keyMetrics: [
+        "Contradictory emotions shown",
+        "Physical reality impacts on behavior",
+        "Conversational authenticity"
+      ]
     },
     
     narrativeComplexity: {
-      checkUnresolvedElements: true,
-      checkMoralAmbiguity: true,
-      checkGenuineFailures: true,
-      avoidConvenientPlotDevelopments: true,
-      checkProtagonistSurprises: true
-    },
-    
-    dialogueQuality: {
-      checkSubtext: true,
-      avoidOverlyPhilosophical: true,
-      checkOrganicHumor: true,
-      checkDistinctiveVoices: true
-    },
-    
-    worldBuilding: {
-      checkMundaneDetails: true,
-      checkEquipmentFailures: true,
-      checkCulturalReferences: true,
-      checkSensoryInconsistency: true
-    },
-    
-    antagonistDevelopment: {
-      checkComplexMotivations: true,
-      avoidSimpleGreed: true,
-      checkValidPoints: true,
-      checkInstitutionalHumans: true
+      current: 70,
+      target: 85,
+      keyMetrics: [
+        "Interconnected plot threads",
+        "Consequences spanning multiple chapters",
+        "Ambiguous outcomes that feel real"
+      ]
     }
-  },
-
-  // Common AI patterns to avoid (based on feedback)
-  avoidPatterns: {
-    repetitiveDescriptions: [
-      "Avoid repeatedly mentioning same character traits",
-      "Don't always describe characters with signature features",
-      "Vary how you introduce characters in different scenes"
-    ],
-    
-    formulaicChapters: [
-      "Break setup-conflict-resolution pattern",
-      "Vary chapter opening and ending styles",
-      "Mix action-heavy with reflective chapters organically"
-    ],
-    
-    overlyProfound: [
-      "Reduce philosophical monologues",
-      "Let wisdom emerge through action rather than speeches",
-      "Avoid characters who always speak in profound ways"
-    ],
-    
-    convenientSolutions: [
-      "Make problems harder to solve",
-      "Include failed attempts and setbacks",
-      "Show the messiness of real problem-solving"
-    ],
-    
-    limitedEmotions: [
-      "Expand emotional range beyond character archetypes",
-      "Show contradictory emotions simultaneously",
-      "Include emotions that don't fit character's usual pattern"
-    ],
-    
-    overusedMetaphors: [
-      "Vary metaphors and similes",
-      "Avoid comparing everything to living entities",
-      "Use concrete rather than abstract comparisons"
-    ]
   }
 };
 
