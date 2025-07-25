@@ -408,6 +408,24 @@ JSON format:
       const chapterOutline = job.outline[i];
       const chapterNumber = chapterOutline.chapterNumber || (i + 1);
       
+      // Check if job has been cancelled before each chapter
+      const currentJob = await Job.findById(jobId);
+      if (!currentJob || currentJob.status === 'failed' || currentJob.currentPhase === 'cancelled') {
+        logger.info(`Job ${jobId} was cancelled, stopping generation at chapter ${chapterNumber}`);
+        
+        // Clean up activeJobs
+        this.activeJobs.delete(jobId);
+        
+        // Emit cancellation update
+        emitJobUpdate(jobId, {
+          status: 'cancelled',
+          currentPhase: 'cancelled',
+          message: 'Generation cancelled by user'
+        });
+        
+        throw new Error('Job cancelled by user');
+      }
+      
       emitJobUpdate(jobId, {
         currentPhase: 'chapter_writing',
         message: `Generating chapter ${chapterNumber} of ${job.targetChapters}...`,

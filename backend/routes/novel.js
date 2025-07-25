@@ -541,23 +541,41 @@ router.delete('/:jobId',
         return res.status(404).json({ error: 'Job not found' });
       }
       
-      // Only allow deletion of pending, failed, or completed jobs
-      const deletableStatuses = ['pending', 'failed', 'completed'];
-      if (!deletableStatuses.includes(job.status)) {
-        return res.status(400).json({ 
-          error: 'Cannot delete active job',
-          message: 'Job is currently being processed and cannot be deleted'
+      // If job is active (planning, analysis, outlining, writing), cancel it
+      const activeStatuses = ['planning', 'analysis', 'outlining', 'writing'];
+      if (activeStatuses.includes(job.status)) {
+        logger.info(`Cancelling active job ${jobId}`);
+        
+        // Mark job as cancelled
+        job.status = 'failed';
+        job.currentPhase = 'cancelled';
+        job.error = 'Job cancelled by user';
+        job.progress.lastActivity = new Date();
+        await job.save();
+        
+        return res.json({ 
+          message: 'Job cancelled successfully',
+          status: 'cancelled' 
         });
       }
       
-      await Job.findByIdAndDelete(jobId);
+      // For completed/failed jobs, delete them
+      const deletableStatuses = ['pending', 'failed', 'completed'];
+      if (deletableStatuses.includes(job.status)) {
+        await Job.findByIdAndDelete(jobId);
+        logger.info(`Deleted job ${jobId}`);
+        return res.json({ message: 'Job deleted successfully' });
+      }
       
-      logger.info(`Deleted job ${jobId}`);
-      res.json({ message: 'Job deleted successfully' });
+      // Shouldn't reach here, but handle edge case
+      return res.status(400).json({ 
+        error: 'Cannot process job',
+        message: `Job status: ${job.status}`
+      });
       
     } catch (error) {
-      logger.error('Error deleting job:', error);
-      res.status(500).json({ error: 'Failed to delete job' });
+      logger.error('Error cancelling/deleting job:', error);
+      res.status(500).json({ error: 'Failed to cancel/delete job' });
     }
   }
 );

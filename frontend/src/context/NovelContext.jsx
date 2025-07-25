@@ -77,6 +77,14 @@ function novelReducer(state, action) {
         isLoading: false, 
         ...action.payload 
       };
+    case 'GENERATION_CANCELLED':
+      return { 
+        ...state, 
+        isLoading: false, 
+        status: 'cancelled',
+        currentPhase: 'cancelled',
+        error: 'Generation was cancelled by user'
+      };
     case 'GENERATION_ERROR':
       return { 
         ...state, 

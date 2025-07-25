@@ -55,3 +55,8 @@ export const getGenres = async () => {
   const response = await api.get('/api/novel/genres');
   return response.data;
 };
+
+export const cancelJob = async (jobId) => {
+  const response = await api.delete(`/api/novel/${jobId}`);
+  return response.data;
+};

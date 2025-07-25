@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useNovel } from '../../context/NovelContext';
 import { useWebSocket } from '../../hooks/useWebSocket';
-import { getJobStatus } from '../../services/api';
+import { getJobStatus, cancelJob } from '../../services/api';
 import ProgressPhase from './ProgressPhase';
 import ChapterProgress from './ChapterProgress';
 import CostTracker from './CostTracker';
@@ -13,7 +13,24 @@ function GenerationProgress() {
   const navigate = useNavigate();
   const { state, dispatch } = useNovel();
   const [isLoading, setIsLoading] = useState(true);
+  const [isCancelling, setIsCancelling] = useState(false);
   const { isConnected } = useWebSocket(jobId);
+  
+  const handleCancelGeneration = async () => {
+    if (window.confirm('Are you sure you want to cancel this generation? This action cannot be undone.')) {
+      setIsCancelling(true);
+      try {
+        await cancelJob(jobId);
+        dispatch({ type: 'GENERATION_CANCELLED' });
+        navigate('/');
+      } catch (error) {
+        console.error('Failed to cancel job:', error);
+        alert('Failed to cancel generation. Please try again.');
+      } finally {
+        setIsCancelling(false);
+      }
+    }
+  };
   
   useEffect(() => {
     const fetchJobStatus = async () => {
@@ -99,12 +116,25 @@ function GenerationProgress() {
   return (
     <div className="generation-progress">
       <div className="progress-header">
-        <h2>Generating Your Novel</h2>
-        {!isConnected && (
-          <div className="connection-warning">
-            <p>⚠️ Connection lost - reconnecting...</p>
-          </div>
-        )}
+        <div className="progress-title">
+          <h2>Generating Your Novel</h2>
+          {!isConnected && (
+            <div className="connection-warning">
+              <p>⚠️ Connection lost - reconnecting...</p>
+            </div>
+          )}
+        </div>
+        
+        <div className="progress-actions">
+          <button 
+            className="stop-button"
+            onClick={handleCancelGeneration}
+            disabled={isCancelling}
+            title="Stop generation and return to home"
+          >
+            {isCancelling ? '🛑 Cancelling...' : '🛑 Stop Generation'}
+          </button>
+        </div>
       </div>
       
       <div className="progress-layout">
