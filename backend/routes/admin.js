@@ -3,6 +3,52 @@ const express = require('express');
 const router = express.Router();
 const Job = require('../models/job');
 
+// EMERGENCY: Kill ALL active jobs immediately (admin endpoint)
+router.post('/kill-all-jobs', async (req, res) => {
+  try {
+    console.log('🚨 EMERGENCY: Killing ALL active jobs...');
+    
+    // Find ALL active jobs regardless of time
+    const activeJobs = await Job.find({
+      status: { $in: ['pending', 'planning', 'analysis', 'outlining', 'writing', 'chapter_writing'] }
+    });
+    
+    console.log(`🚨 Found ${activeJobs.length} active jobs to kill`);
+    
+    // Kill them ALL immediately
+    const updateResult = await Job.updateMany(
+      {
+        status: { $in: ['pending', 'planning', 'analysis', 'outlining', 'writing', 'chapter_writing'] }
+      },
+      {
+        $set: {
+          status: 'failed',
+          currentPhase: 'cancelled',
+          error: 'EMERGENCY KILL: Job forcibly cancelled to prevent FUBAR situation',
+          updatedAt: new Date()
+        }
+      }
+    );
+    
+    console.log(`🚨 KILLED ${updateResult.modifiedCount} active jobs`);
+    
+    // Send immediate response
+    res.json({
+      success: true,
+      message: `EMERGENCY KILL COMPLETE: Cancelled ${updateResult.modifiedCount} active jobs`,
+      killedJobs: updateResult.modifiedCount,
+      availableSlots: 3
+    });
+    
+  } catch (error) {
+    console.error('Error killing jobs:', error);
+    res.status(500).json({ 
+      error: 'Failed to kill jobs', 
+      details: error.message 
+    });
+  }
+});
+
 // Clean up stuck jobs (admin endpoint)
 router.post('/cleanup-stuck-jobs', async (req, res) => {
   try {
