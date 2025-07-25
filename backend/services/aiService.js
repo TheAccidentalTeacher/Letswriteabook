@@ -713,39 +713,8 @@ JSON format:
       chapterOutline.wordTarget = Math.round(job.targetWordCount / job.targetChapters);
     }
     
-    // DYNAMIC WORD COUNT ADJUSTMENT - Compensate for previous chapter deficits (WITH CAPS)
-    if (job.chapters && job.chapters.length > 0) {
-      const completedWords = job.chapters.reduce((sum, ch) => sum + (ch.wordCount || 0), 0);
-      const expectedWordsAtThisPoint = Math.round((job.targetWordCount / job.targetChapters) * job.chapters.length);
-      const deficit = expectedWordsAtThisPoint - completedWords;
-      const baseTarget = Math.round(job.targetWordCount / job.targetChapters);
-      
-      if (deficit > 500) { // If we're significantly behind
-        const chaptersRemaining = job.targetChapters - chapterNumber + 1;
-        let extraWordsNeeded = Math.round(deficit / chaptersRemaining);
-        
-        // CAP THE ADJUSTMENT - Never more than 50% extra words per chapter
-        const maxExtraWords = Math.round(baseTarget * 0.5);
-        extraWordsNeeded = Math.min(extraWordsNeeded, maxExtraWords);
-        
-        // CAP THE TOTAL TARGET - Never exceed 3500 words per chapter
-        const proposedTarget = chapterOutline.wordTarget + extraWordsNeeded;
-        chapterOutline.wordTarget = Math.min(proposedTarget, 3500);
-        
-        logger.info(`Chapter ${chapterNumber}: Adding ${extraWordsNeeded} words (capped) to compensate for ${deficit} word deficit. New target: ${chapterOutline.wordTarget}`);
-        
-        // Emit deficit tracking
-        emitGenerationProgress(jobId, {
-          phase: 'chapter_planning',
-          chapterNumber,
-          status: 'word_adjustment',
-          deficit: deficit,
-          adjustment: extraWordsNeeded,
-          newTarget: chapterOutline.wordTarget,
-          details: `Adjusting chapter ${chapterNumber} target by +${extraWordsNeeded} words (capped at 3500) to compensate for running deficit`
-        });
-      }
-    }
+    // SIMPLE WORD TARGET - No deficit compensation, just use base target
+    // Each chapter gets a simple, consistent target with no adjustments
     
     // SAFETY CHECK: Cap all chapter targets at reasonable maximums
     if (chapterOutline.wordTarget > 3500) {
