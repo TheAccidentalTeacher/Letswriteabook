@@ -4,6 +4,118 @@ const router = express.Router();
 const Job = require('../models/job');
 
 // EMERGENCY: Kill ALL active jobs immediately (admin endpoint)
+router.get('/kill-all-jobs', async (req, res) => {
+  try {
+    console.log('🚨 EMERGENCY: Killing ALL active jobs...');
+    
+    // Find ALL active jobs regardless of time
+    const activeJobs = await Job.find({
+      status: { $in: ['pending', 'planning', 'analysis', 'outlining', 'writing', 'chapter_writing'] }
+    });
+    
+    console.log(`🚨 Found ${activeJobs.length} active jobs to kill`);
+    
+    // Kill them ALL immediately
+    const updateResult = await Job.updateMany(
+      {
+        status: { $in: ['pending', 'planning', 'analysis', 'outlining', 'writing', 'chapter_writing'] }
+      },
+      {
+        $set: {
+          status: 'failed',
+          currentPhase: 'cancelled',
+          error: 'EMERGENCY KILL: Job forcibly cancelled to prevent FUBAR situation',
+          updatedAt: new Date()
+        }
+      }
+    );
+    
+    console.log(`🚨 KILLED ${updateResult.modifiedCount} active jobs`);
+    
+    // Send HTML response for browser viewing
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>🚨 EMERGENCY KILL COMPLETE</title>
+      <style>
+        body { 
+          font-family: Arial, sans-serif; 
+          margin: 40px; 
+          background: #f5f5f5; 
+          text-align: center;
+        }
+        .success { 
+          background: #d4edda; 
+          color: #155724; 
+          padding: 20px; 
+          border: 1px solid #c3e6cb; 
+          border-radius: 8px;
+          font-size: 18px;
+          margin: 20px 0;
+        }
+        .stats {
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 20px 0;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>🚨 EMERGENCY KILL COMPLETE</h1>
+      
+      <div class="success">
+        <h2>✅ ALL ZOMBIE JOBS ELIMINATED!</h2>
+        <p><strong>Killed Jobs:</strong> ${updateResult.modifiedCount}</p>
+        <p><strong>Available Slots:</strong> 3/3</p>
+        <p><strong>Status:</strong> You are UN-FUBAR'd! 🎉</p>
+      </div>
+      
+      <div class="stats">
+        <h3>What Happened:</h3>
+        <ul style="text-align: left; max-width: 600px; margin: 0 auto;">
+          <li>Found ${activeJobs.length} zombie jobs burning your credits</li>
+          <li>Killed all ${updateResult.modifiedCount} active jobs immediately</li>
+          <li>Freed up all concurrent job slots</li>
+          <li>Stopped background AI generation processes</li>
+        </ul>
+      </div>
+      
+      <h2>🎯 You can now generate novels again!</h2>
+      <p><a href="/">← Go back to generator</a></p>
+    </body>
+    </html>`;
+    
+    res.send(html);
+    
+  } catch (error) {
+    console.error('Error killing jobs:', error);
+    
+    const errorHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>❌ KILL FAILED</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; }
+      </style>
+    </head>
+    <body>
+      <h1>❌ EMERGENCY KILL FAILED</h1>
+      <div class="error">
+        <p><strong>Error:</strong> ${error.message}</p>
+        <p>Please try again or contact support.</p>
+      </div>
+    </body>
+    </html>`;
+    
+    res.status(500).send(errorHtml);
+  }
+});
+
+// EMERGENCY: Kill ALL active jobs immediately (POST version for API calls)
 router.post('/kill-all-jobs', async (req, res) => {
   try {
     console.log('🚨 EMERGENCY: Killing ALL active jobs...');
