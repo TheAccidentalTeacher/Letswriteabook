@@ -1,4 +1,5 @@
 // sanitizer.js - XSS protection utilities for frontend
+// Last updated: July 25, 2025 at 8:10 PM
 import DOMPurify from 'dompurify';
 
 /**
