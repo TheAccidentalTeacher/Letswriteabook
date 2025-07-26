@@ -12,6 +12,7 @@ const genreInstructions = require('../shared/genreInstructions');
 const humanWritingEnhancements = require('../shared/humanWritingEnhancements');
 const universalFramework = require('../shared/universalHumanWritingFramework');
 const advancedRefinements = require('../shared/advancedHumanWritingRefinements');
+const continuityGuardian = require('../shared/continuityGuardian');
 // const monitoringService = require('./monitoringService'); // Removed - was causing crashes
 
 class AIService {
