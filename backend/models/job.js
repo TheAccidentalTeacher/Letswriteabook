@@ -105,6 +105,10 @@ const jobSchema = new mongoose.Schema({
     maxLength: 30000, // ~5,000 words
     required: true
   },
+  synopsis: {
+    type: String,
+    maxLength: 50000 // Allow for longer synopsis
+  },
   title: {
     type: String,
     required: true

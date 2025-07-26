@@ -12,8 +12,7 @@ const genreInstructions = require('../shared/genreInstructions');
 const humanWritingEnhancements = require('../shared/humanWritingEnhancements');
 const universalFramework = require('../shared/universalHumanWritingFramework');
 const advancedRefinements = require('../shared/advancedHumanWritingRefinements');
-const ContinuityGuardian = require('../shared/continuityGuardian');
-const LightweightConsistency = require('../shared/lightweightConsistency');
+// const monitoringService = require('./monitoringService'); // Removed - was causing crashes
 
 class AIService {
   constructor() {
@@ -46,14 +45,14 @@ class AIService {
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
 
-    // Initialize continuity guardian for story consistency tracking
-    const continuityGuardian = new ContinuityGuardian(jobId);
+    // Initialize monitoring for this job
+    // monitoringService.initializeJob(jobId); // Removed - was causing crashes
+    logger.info(`Monitoring service disabled for job ${jobId}`);
     
     // Add to active jobs
     this.activeJobs.set(jobId, {
       startTime: Date.now(),
-      status: 'planning',
-      continuityGuardian: continuityGuardian
+      status: 'planning'
     });
     
     try {
@@ -81,6 +80,9 @@ class AIService {
       
       // Remove from active jobs
       this.activeJobs.delete(jobId);
+      
+      // Clean up monitoring data (but preserve final state for viewing)
+      // Note: We don't clean up here so users can review the final monitoring data
       
       emitJobUpdate(jobId, {
         status: 'completed',
@@ -357,6 +359,16 @@ JSON format:
         duration: Date.now() - outlineStart
       };
       
+      // Generate synopsis for future reference
+      try {
+        const synopsis = await this.generateSynopsis(job);
+        job.synopsis = synopsis;
+        logger.info(`Generated synopsis for job ${jobId}`);
+      } catch (error) {
+        logger.warn(`Failed to generate synopsis for job ${jobId}: ${error.message}`);
+        job.synopsis = `Novel based on premise: ${job.premise}`;
+      }
+      
       await job.save();
       
       emitJobUpdate(jobId, {
@@ -408,24 +420,6 @@ JSON format:
     for (let i = 0; i < job.outline.length; i++) {
       const chapterOutline = job.outline[i];
       const chapterNumber = chapterOutline.chapterNumber || (i + 1);
-      
-      // Check if job has been cancelled before each chapter
-      const currentJob = await Job.findById(jobId);
-      if (!currentJob || currentJob.status === 'failed' || currentJob.currentPhase === 'cancelled') {
-        logger.info(`Job ${jobId} was cancelled, stopping generation at chapter ${chapterNumber}`);
-        
-        // Clean up activeJobs
-        this.activeJobs.delete(jobId);
-        
-        // Emit cancellation update
-        emitJobUpdate(jobId, {
-          status: 'cancelled',
-          currentPhase: 'cancelled',
-          message: 'Generation cancelled by user'
-        });
-        
-        throw new Error('Job cancelled by user');
-      }
       
       emitJobUpdate(jobId, {
         currentPhase: 'chapter_writing',
@@ -611,38 +605,55 @@ JSON format:
     logger.info(`Initialized ${job.chapters.length} chapter slots for job ${jobId}`);
   }
 
-  // SIMPLIFIED chapter generation - NO RETRIES
+  // Enhanced chapter generation with proper error handling
   async generateChapterWithRetry(jobId, chapterNumber, chapterOutline) {
-    try {
-      // Update chapter status to 'generating'
-      await this.updateChapterStatus(jobId, chapterNumber, 'generating', 1);
+    const maxAttempts = 3;
+    let attempts = 0;
+    let lastError = null;
+    
+    while (attempts < maxAttempts) {
+      attempts++;
       
-      // Generate chapter exactly once
-      const chapter = await this.generateSingleChapter(jobId, chapterNumber, chapterOutline, 1);
-      
-      // Mark as completed
-      chapter.status = 'completed';
-      chapter.attempts = 1;
-      
-      return {
-        success: true,
-        chapter: chapter,
-        attempts: 1
-      };
-      
-    } catch (error) {
-      logger.error(`Chapter ${chapterNumber} failed for job ${jobId}:`, error.message);
-      
-      // Update chapter with failure info - NO RETRY
-      await this.updateChapterStatus(jobId, chapterNumber, 'failed', 1, error.message);
-      
-      // Return failure result and move on
-      return {
-        success: false,
-        error: error.message,
-        attempts: 1
-      };
+      try {
+        // Update chapter status to 'generating'
+        await this.updateChapterStatus(jobId, chapterNumber, 'generating', attempts);
+        
+        const chapter = await this.generateSingleChapter(jobId, chapterNumber, chapterOutline, attempts);
+        
+        // Mark as completed
+        chapter.status = 'completed';
+        chapter.attempts = attempts;
+        
+        return {
+          success: true,
+          chapter: chapter,
+          attempts: attempts
+        };
+        
+      } catch (error) {
+        lastError = error;
+        logger.error(`Attempt ${attempts} failed for chapter ${chapterNumber} in job ${jobId}:`, error);
+        
+        // Update chapter with failure info
+        await this.updateChapterStatus(jobId, chapterNumber, 'generating', attempts, error.message);
+        
+        if (attempts >= maxAttempts) {
+          break;
+        }
+        
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
+      }
     }
+    
+    // All attempts failed
+    await this.updateChapterStatus(jobId, chapterNumber, 'failed', attempts, lastError.message);
+    
+    return {
+      success: false,
+      error: lastError.message,
+      attempts: attempts
+    };
   }
 
   // Update chapter status in database
@@ -670,7 +681,11 @@ JSON format:
     const chapterIndex = job.chapters.findIndex(ch => ch.chapterNumber === chapter.chapterNumber);
     if (chapterIndex >= 0) {
       job.chapters[chapterIndex] = chapter;
+      job.chapters[chapterIndex].status = 'completed';
       await job.save();
+      
+      // Generate and update chapter summary for future chapters to use
+      await this.updateChapterSummary(job, chapter.chapterNumber, chapter.content, chapter.title);
     }
   }
 
@@ -713,15 +728,6 @@ JSON format:
       chapterOutline.wordTarget = Math.round(job.targetWordCount / job.targetChapters);
     }
     
-    // SIMPLE WORD TARGET - No deficit compensation, just use base target
-    // Each chapter gets a simple, consistent target with no adjustments
-    
-    // SAFETY CHECK: Cap all chapter targets at reasonable maximums
-    if (chapterOutline.wordTarget > 3500) {
-      logger.warn(`Chapter ${chapterNumber} target too high (${chapterOutline.wordTarget}), capping at 3500 words`);
-      chapterOutline.wordTarget = 3500;
-    }
-    
     // Check for very large chapters that might hit token limits
     if (chapterOutline.wordTarget > 8000) {
       logger.warn(`Very large chapter ${chapterNumber} requested: ${chapterOutline.wordTarget} words. May hit token limits.`);
@@ -729,23 +735,21 @@ JSON format:
       chapterOutline.wordTarget = Math.min(chapterOutline.wordTarget, 8000);
     }
     
-    // SINGLE ATTEMPT GENERATION - NO RETRY LOOP
-    const chapterStart = Date.now();
+    const maxRetries = 3;
+    let retryCount = 0;
     
-    // Get genre-specific instructions
-    const genreInstruction = genreInstructions[job.genre]?.[job.subgenre];
+    while (retryCount < maxRetries) {
+      retryCount++;
+      
+      try {
+        const chapterStart = Date.now();
         
-        // LIGHTWEIGHT CONSISTENCY CHECK - Generate contextual notes
-        let consistencyPrompt = '';
-        try {
-          const consistency = new LightweightConsistency();
-          consistencyPrompt = consistency.generateConsistencyPrompt(job.chapters || []);
-        } catch (error) {
-          logger.warn(`Consistency check failed for chapter ${chapterNumber}: ${error.message}`);
-          // Continue without consistency check - don't block generation
-        }
+        // Get genre-specific instructions
+        const genreInstruction = genreInstructions[job.genre]?.[job.subgenre];
         
-        // Simple, clean chapter prompt - no retry complexity
+        // Build comprehensive story memory
+        const storyMemory = await this.buildStoryMemory(job, chapterNumber);
+        
         const chapterPrompt = `
 Write Chapter ${chapterNumber} of the novel "${job.title}".
 
@@ -756,11 +760,17 @@ Key Events: ${chapterOutline.keyEvents.join(', ')}
 Target Word Count: ${chapterOutline.wordTarget}${job.humanLikeWriting ? `
 Human-Like Elements: ${JSON.stringify(chapterOutline.humanLikeElements || {}, null, 1)}` : ''}
 
-NOVEL CONTEXT:
+STORY FOUNDATION:
 Premise: "${job.premise}"
 Genre: ${job.genre.replace(/_/g, ' ')} - ${job.subgenre.replace(/_/g, ' ')}
-Previous chapters: ${job.chapters.length > 0 ? job.chapters.slice(-3).map(ch => `Ch${ch.chapterNumber}: ${ch.title} (${ch.wordCount}w)`).join('; ') : 'This is the first chapter'}
-Story progress: Chapter ${chapterNumber} of ${job.targetChapters} total
+
+ORIGINAL SYNOPSIS:
+${job.synopsis || 'No synopsis available'}
+
+COMPLETE CHAPTER OUTLINE:
+${job.outline ? job.outline.map(ch => `Ch${ch.chapterNumber}: ${ch.title} - ${ch.summary}`).join('\n') : 'No outline available'}
+
+${storyMemory}
 
 GENRE GUIDELINES:
 ${genreInstruction}
@@ -771,8 +781,6 @@ ${job.targetChapters > 20 ?
 Main characters: ${job.analysis?.characters?.join(', ') || 'N/A'}${job.humanLikeWriting ? `
 Human-like story elements: ${JSON.stringify(job.analysis?.humanLikeElements || {}, null, 1)}` : ''}` :
   JSON.stringify(job.analysis || {}, null, 1)}
-
-${consistencyPrompt ? `\n${consistencyPrompt}\n` : ''}
 
 ${job.humanLikeWriting ? humanWritingEnhancements.prompts.chapter.humanLikeAdditions : ''}
 
@@ -815,7 +823,7 @@ ADVANCED AUTHENTICITY TECHNIQUES:
 
 Write approximately ${chapterOutline.wordTarget} words that push established complexity to breaking points and challenge reader expectations while maintaining narrative authenticity.` : `Write approximately ${chapterOutline.wordTarget} words of engaging prose that maintains genre conventions and advances the story effectively.`}
 
-Write only the chapter content, no metadata or formatting. Target ${chapterOutline.wordTarget} words of quality prose.`;
+Write only the chapter content, no metadata or formatting.`;
 
         // Emit generation progress
         emitGenerationProgress(jobId, {
@@ -826,64 +834,28 @@ Write only the chapter content, no metadata or formatting. Target ${chapterOutli
           details: `Generating chapter ${chapterNumber}: "${chapterOutline.title}"`
         });
 
-        // Simple token allocation - no retry complexity
-        const maxTokens = Math.min(16000, Math.max(4000, Math.round(chapterOutline.wordTarget * 1.6)));
-
         const response = await this.openai.chat.completions.create({
           model: 'gpt-4o',
           messages: [{ role: 'user', content: chapterPrompt }],
           temperature: 0.7,
-          max_tokens: maxTokens
+          max_tokens: Math.min(16000, Math.max(4000, Math.round(chapterOutline.wordTarget * 1.6))) // Respect 16K limit, reduce multiplier
         });
         
         const chapterContent = response.choices[0].message.content.trim();
         const wordCount = this.countWords(chapterContent);
         
-        // Calculate word accuracy for reporting (no retry logic)
-        const wordTarget = chapterOutline.wordTarget;
-        const wordAccuracy = (wordCount / wordTarget) * 100;
-        
-        // Emit generation completion - always accept what we get
+        // Emit generation completion
         emitGenerationProgress(jobId, {
           phase: 'chapter_generation',
           chapterNumber,
           status: 'ai_completed',
           wordsGenerated: wordCount,
           wordTarget: chapterOutline.wordTarget,
-          accuracy: Math.round(wordAccuracy),
-          details: `Chapter ${chapterNumber} generated: ${wordCount} words (${Math.round(wordAccuracy)}% of target)`
+          details: `Chapter ${chapterNumber} generated: ${wordCount} words`
         });
-        
-        // LIGHTWEIGHT CONSISTENCY VALIDATION - Quick check for obvious issues
-        let consistencyValidation = { isValid: true, warnings: [] };
-        if (job.chapters && job.chapters.length > 0) {
-          try {
-            const consistency = new LightweightConsistency();
-            consistencyValidation = consistency.validateChapter(chapterContent, job.chapters);
-            
-            if (!consistencyValidation.isValid && consistencyValidation.warnings.length > 0) {
-              logger.warn(`Consistency warnings for chapter ${chapterNumber}: ${consistencyValidation.warnings.join(', ')}`);
-              
-              // Emit consistency warnings (but don't block generation)
-              emitGenerationProgress(jobId, {
-                phase: 'chapter_generation',
-                chapterNumber,
-                status: 'consistency_warning',
-                warnings: consistencyValidation.warnings,
-                details: `Consistency warnings: ${consistencyValidation.warnings.join(', ')}`
-              });
-            }
-          } catch (error) {
-            logger.warn(`Consistency validation error for chapter ${chapterNumber}: ${error.message}`);
-            // Continue without validation - don't block generation
-          }
-        }
         
         // Validate continuity if enabled
         let continuityValidation = { isValid: true, issues: [], suggestions: [] };
-        const activeJob = this.activeJobs.get(jobId);
-        const continuityGuardian = activeJob?.continuityGuardian;
-        
         if (job.humanLikeWriting && job.continuityGuardian !== false && continuityGuardian) {
           try {
             // Emit validation start
@@ -944,25 +916,34 @@ Write only the chapter content, no metadata or formatting. Target ${chapterOutli
           cost: cost,
           attempts: attempts, // This is the parameter passed to the function
           generationTime: Date.now() - chapterStart,
-          continuityCheck: continuityValidation, // Include continuity validation results
-          consistencyCheck: consistencyValidation // Include lightweight consistency results
+          continuityCheck: continuityValidation // Include continuity validation results
         };
         
-        logger.info(`Generated chapter ${chapterNumber} for job ${jobId} (${wordCount} words)`);
+        logger.info(`Generated chapter ${chapterNumber} for job ${jobId} (${wordCount} words, attempt ${retryCount})`);
         
         return chapter;
+        
+      } catch (error) {
+        logger.error(`Attempt ${retryCount} failed for chapter ${chapterNumber} in job ${jobId}:`, error);
+        
+        if (retryCount >= maxRetries) {
+          throw new Error(`Failed to generate chapter ${chapterNumber} after ${maxRetries} attempts: ${error.message}`);
+        }
+        
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+      }
+    }
   }
   
   async resumeChapterGeneration(jobId, startFromChapter = 1) {
     const job = await Job.findById(jobId);
     if (!job) throw new Error(`Job ${jobId} not found`);
     
-    // Preserve existing activeJob data or create new with continuityGuardian
-    const existingActiveJob = this.activeJobs.get(jobId);
+    // Add to active jobs
     this.activeJobs.set(jobId, {
-      startTime: existingActiveJob?.startTime || Date.now(),
-      status: 'writing',
-      continuityGuardian: existingActiveJob?.continuityGuardian || new ContinuityGuardian(jobId)
+      startTime: Date.now(),
+      status: 'writing'
     });
     
     // Update job status
@@ -1141,6 +1122,134 @@ Write only the chapter content, no metadata or formatting. Target ${chapterOutli
     return false;
   }
   
+  // Generate a synopsis based on the premise and outline
+  async generateSynopsis(job) {
+    try {
+      const synopsisPrompt = `
+Based on the premise and chapter outline, create a comprehensive synopsis for this novel:
+
+PREMISE: ${job.premise}
+TITLE: ${job.title}
+GENRE: ${job.genre.replace(/_/g, ' ')} - ${job.subgenre.replace(/_/g, ' ')}
+TARGET LENGTH: ${job.targetWordCount} words, ${job.targetChapters} chapters
+
+CHAPTER OUTLINE:
+${job.outline.map(ch => `Ch${ch.chapterNumber}: ${ch.title} - ${ch.summary}`).join('\n')}
+
+Write a detailed synopsis that captures:
+- The main story arc and central conflict
+- Key character development and relationships
+- Major plot points and turning moments
+- The story's themes and genre elements
+- How the story resolves
+
+This synopsis will be used to maintain consistency throughout the novel generation process.
+
+Synopsis:`;
+
+      const response = await this.openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: synopsisPrompt }],
+        temperature: 0.3,
+        max_tokens: 1500
+      });
+      
+      return response.choices[0].message.content.trim();
+    } catch (error) {
+      logger.warn(`Failed to generate synopsis: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Build comprehensive story memory for chapter generation
+  async buildStoryMemory(job, currentChapterNumber) {
+    let memoryText = '';
+    let needsSaving = false;
+    
+    const completedChapters = job.chapters.filter(ch => ch.status === 'completed' && ch.content);
+    
+    if (completedChapters.length === 0) {
+      memoryText += '\nSTORY PROGRESS: This is the first chapter\n';
+      return memoryText;
+    }
+    
+    // Add chapter summaries for ALL completed chapters
+    if (completedChapters.length > 0) {
+      memoryText += '\nCHAPTER SUMMARIES (ALL PREVIOUS CHAPTERS):\n';
+      
+      for (const chapter of completedChapters) {
+        if (!chapter.summary) {
+          // Generate summary if missing
+          chapter.summary = await this.generateChapterSummary(chapter.content, chapter.chapterNumber, chapter.title);
+          needsSaving = true;
+        }
+        memoryText += `Ch${chapter.chapterNumber}: ${chapter.title} - ${chapter.summary}\n`;
+      }
+    }
+    
+    // Save any newly generated summaries
+    if (needsSaving) {
+      await job.save();
+    }
+    
+    // Add full text of last 10 chapters for detailed context
+    const recentChapters = completedChapters.slice(-10);
+    if (recentChapters.length > 0) {
+      memoryText += '\nRECENT CHAPTERS (FULL TEXT - LAST 10):\n';
+      for (const chapter of recentChapters) {
+        memoryText += `\n--- CHAPTER ${chapter.chapterNumber}: ${chapter.title} ---\n`;
+        memoryText += chapter.content + '\n';
+      }
+    }
+    
+    memoryText += `\nCURRENT PROGRESS: Writing Chapter ${currentChapterNumber} of ${job.targetChapters} total\n`;
+    
+    return memoryText;
+  }
+  
+  // Generate a summary of a chapter's content
+  async generateChapterSummary(chapterContent, chapterNumber, chapterTitle) {
+    try {
+      const summaryPrompt = `
+Summarize this chapter in 2-3 sentences, focusing on key plot developments, character actions, and important story elements that future chapters need to remember for consistency:
+
+CHAPTER ${chapterNumber}: ${chapterTitle}
+
+${chapterContent.substring(0, 3000)}${chapterContent.length > 3000 ? '...' : ''}
+
+Summary:`;
+
+      const response = await this.openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: summaryPrompt }],
+        temperature: 0.3,
+        max_tokens: 200
+      });
+      
+      return response.choices[0].message.content.trim();
+    } catch (error) {
+      logger.warn(`Failed to generate summary for chapter ${chapterNumber}: ${error.message}`);
+      return `Chapter ${chapterNumber}: ${chapterTitle} - Content generated successfully`;
+    }
+  }
+  
+  // Update chapter summaries after successful generation
+  async updateChapterSummary(job, chapterNumber, chapterContent, chapterTitle) {
+    try {
+      const summary = await this.generateChapterSummary(chapterContent, chapterNumber, chapterTitle);
+      
+      // Find and update the chapter
+      const chapterIndex = job.chapters.findIndex(ch => ch.chapterNumber === chapterNumber);
+      if (chapterIndex !== -1) {
+        job.chapters[chapterIndex].summary = summary;
+        await job.save();
+        logger.info(`Updated summary for chapter ${chapterNumber}`);
+      }
+    } catch (error) {
+      logger.warn(`Failed to update summary for chapter ${chapterNumber}: ${error.message}`);
+    }
+  }
+
   async handleGenerationError(jobId, error, phase = null) {
     logger.error(`Error in generation for job ${jobId}:`, error);
     
